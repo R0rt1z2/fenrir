@@ -1,0 +1,6 @@
+arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-elf/
+payload/build/
+**/__pycache__/
+*.patched
+*.bin
+settings.json
