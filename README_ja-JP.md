@@ -1,6 +1,6 @@
 # fenrir
 
-Language: [English](./README.md)
+**Language:** [English](./README.md)
 
 これは、Nothing Phone (2a) または CMF Phone 1 (おそらく他の MediaTek デバイスにも対応) のセキュアブートチェーンの脆弱性を悪用した PoC Exploit です。
 
