@@ -1,25 +1,27 @@
 # fenrir
 
-This is a PoC exploit for a vulnerability in the Nothing Phone 2a / CMF Phone 1 secure boot chain (and possibly other MediaTek devices).
+Language: [English](./README.md)
 
-It abuses a logic flaw where one component isn't properly verified if the seccfg unlock state is set to unlocked.
+これは、Nothing Phone (2a) または CMF Phone 1 (おそらく他の MediaTek デバイスにも対応) のセキュアブートチェーンの脆弱性を悪用した PoC Exploit です。
 
-The exploit achieves code execution at EL3 and breaks the secure boot chain after Preloader execution.
+seccfg のアンロック状態がアンロックに設定されている場合に、あるコンポーネントが適切に検証されないという論理的な欠陥を悪用します。
+
+この Exploit は、EL3 でコード実行を実現し、Preloader の実行後にセキュアブートチェーンを破壊します。
 
 >[!CAUTION]
-> **I AM NOT RESPONSIBLE FOR BRICKED DEVICES. This exploit can permanently destroy your phone if something goes wrong.**
+> **デバイスの故障については責任を負いかねます。この Exploit を悪用すると、何らかの問題が発生した場合にデバイスがブリックする可能性があります。**
 
-## Explanation
-This exploit abuses a flaw in the MediaTek boot chain. When the bootloader is unlocked (seccfg), the Preloader skips verification of the `bl2_ext` partition, even though `bl2_ext` is responsible for verifying everything that comes after it.
+## 説明
+この Exploit は、MediaTek ブートチェーンの脆弱性を悪用します。ブートローダーがアンロックされている場合 (seccfg)、Preloader は `bl2_ext` の検証をスキップします。しかし、`bl2_ext` パーティションは、その後に続くすべてのパーティションの検証を担っています。
 
-The issue is critical because:
-- Preloader jumps directly into `bl2_ext` while still running at EL3 (highest privilege level)
-- `bl2_ext` controls the transition to EL1 and the non-secure world
-- An unverified `bl2_ext` can load any subsequent images without checks
+この問題は重大です:
+- Preloader は EL3 (最高権限レベル) で実行中に `bl2_ext` へ直接ジャンプします
+- `bl2_ext` は EL1 と非セキュアワールドへの移行を制御します
+- 検証されていない `bl2_ext` は確認なしで後続のイメージを読み込むことができます
 
-By patching `bl2_ext` to skip verification, the entire chain of trust collapses.
+`bl2_ext` にパッチを適用して検証をスキップすると、信頼できるチェーン全体が崩壊します。
 
-### Normal Boot Chain
+### 通常のブートチェーン
 ```mermaid
 graph LR
     A["BootROM (SoC)"] --> B[Preloader]
@@ -40,7 +42,7 @@ graph LR
     class G kernel
 ```
 
-### Exploited Boot Chain
+### Exploit のブートチェーン
 ```mermaid
 graph LR
     A["BootROM (SoC)"] --> B[Preloader]
@@ -59,12 +61,12 @@ graph LR
     class D,E,F,G affected
 ```
 
-The actual exploit just patches `sec_get_vfy_policy()` to always return 0, so an unverified `bl2_ext` running at EL3 now happily loads unverified images for the rest of the boot chain.
+通常の Exploit は、`sec_get_vfy_policy()` をパッチして常に 0 を返すようにするだけなので、EL3 で実行されている未検証の `bl2_ext` は、ブートチェーンの残りの部分に対し未検証のイメージを問題なくロードするようになります。
 
-## Usage
-Place your bootloader image in the `bin/` directory with your device codename (e.g., `bin/pacman.bin`)
+## 使い方
+ブートローダーのイメージをデバイスのコード名で `bin/` ディレクトリに配置します (例: `bin/pacman.bin`)
 
-Once you have your bootloader image ready, you can build the exploit using the provided `build.sh` script:
+ブートローダーのイメージが準備できた後に提供されている `build.sh` スクリプトを使用して Exploit をビルドできます:
 ```bash
 # Using default bootloader location (bin/[device].bin)
 ./build.sh pacman
@@ -73,48 +75,48 @@ Once you have your bootloader image ready, you can build the exploit using the p
 ./build.sh pacman /path/to/your/bootloader.bin
 ```
 
-After building, you should see a new file named `lk.patched` in the root directory. You can now flash this patched bootloader image to your device:
+ビルド後、ルートディレクトリに `lk.patched` という新しいファイルが作成されます。このパッチ適用済みのブートローダーイメージをデバイスにフラッシュすることができます:
 ```
 ./flash.sh
 ```
 
 > [!NOTE]
-> If fastboot mode is not available on your device, you might have to use another method to flash the output image. The provided script assumes fastboot mode is available.
+> デバイスで fastboot モードが利用できない場合は、出力したイメージをフラッシュするための別の方法を使用する必要がある可能性があります。提供されているスクリプトは、fastboot モードが利用可能であることを前提としています。
 
-## Status
-Currently, only the Nothing Phone 2a (`Pacman`) is supported by the exploit. The exploit is also known to work on the CMF Phone 1 (`Tetris`), but support for that device is still incomplete.
+## ステータス
+現在、このExploit は Nothing Phone (2a) (`Pacman`) のみをサポートしています。CMF Phone 1 (`Tetris`) でも動作することが確認されていますが、このデバイスへのサポートはまだ不完全です。
 
-Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
+新しいデバイスのサポートを追加するのは簡単ではありませんが、ある程度の努力とリバースエンジニアリングを行えば可能です。まずは使用しているデバイスの `bl2_ext` パーティションが検証されているかどうか確認することをお勧めします。
 
-If it isn’t, you may be able to use the exploit. You can verify this by examining an `expdb` dump and looking for the `img_auth_required` flag when the partition is being loaded:
+そうでない場合 Exploit を使用できる可能性があります。これは `expdb` ダンプを調べてパーティションのロード時に `img_auth_required` フラグを確認しましょう:
 ```
 [PART] img_auth_required = 0
 [PART] Image with header, name: bl2_ext, addr: FFFFFFFFh, mode: FFFFFFFFh, size:654944, magic:58881688h
 [PART] part: lk_a img: bl2_ext cert vfy(0 ms)
 ```
 
-The payload isn’t strictly necessary, it’s more of a neat addition to the exploit. At the moment, it can’t modify memory at runtime, as doing so triggers an MMU fault that I haven’t resolved yet.
+ペイロードは厳密には必須ではなく、Exploit への便利な追加機能です。現時点では実行時にメモリの変更をすることはできません。そうすると、まだ未解決の MMU エラーが発生するためです。
 
-What it can do is register custom fastboot commands, control the boot mode, and dynamically call any built-in bootloader functions on the fly (you can probably do more, just use your imagination).
+このツールで可能なことは、カスタム fastboot コマンドを登録してブートモードを制御やビルトインのブートローダー関数をオンザフライで動的に呼び出すことです (想像力を働かせれば、おそらく更に多くのことができるでしょう)。
 
-In addition to patching `sec_get_vfy_policy()`, the included PoC also spoofs the device’s lock state as locked so you can pass strong integrity checks anywhere while being unlocked. In theory, it should work with custom ROMs as well, though I haven’t personally tested this yet (it may require some additional vbmeta adjustments).
+`sec_get_vfy_policy()` へのパッチ適用に加えて、同梱の PoC はデバイスのアンロックステータスをロック状態として偽装するため、アンロックの状態でも Strong Integrity をパスできます。理論上はカスタム ROM でも動作するはずですが、個人的にはまだテストしていません (vbmeta の追加調整が必要になる可能性があります)。
 
-Another device known to be affected by this vulnerability is the Vivo X80 Pro. From my previous testing, it didn’t even verify `bl2_ext` despite having a locked bootloader (which makes it even worse).
+この脆弱性の影響を受けることが知られているもう一つのデバイスは、Vivo X80 Pro です。以前のテストでは、ブートローダーがロックされているにも関わらず、`bl2_ext` の検証すら行われませんでした。
 
 ## TODO
-- [ ] Add proper porting guide for new devices
-- [ ] Fix MMU crashes when modifying memory at runtime
-- [ ] Figure out proper payload appending method
+- [ ] 新しいデバイス向けの適切な移植のガイドを追加
+- [ ] 実行時にメモリを変更すると MMU がクラッシュする問題を修正
+- [ ] 適切なペイロードの追加方法を理解する
 
-## License
+## ライセンス
 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+このプロジェクトは **GNU Affero General Public License v3.0 (AGPL-3.0)** に基づいてライセンスされています。
 
-Key points to be aware of:
+知っておくべき重要なポイント:
 
-* You are free to use, modify, and distribute the software.
-* If you modify and use the software publicly, you must release your source code.
-* You must retain the same license (`AGPL-3.0`) when redistributing modified versions.
-* You cannot keep modifications private if the software is used to provide a networked service.
+* 本ソフトウェアは自由に使用、改変、配布ができます。
+* 本ソフトウェアを改変して公開する場合は、ソースコードを公開する必要があります。
+* 改変した物を再配布する場合は、同じライセンス (`AGPL-3.0`) を適用する必要があります。
+* ソフトウェアがネットワークサービスを提供するために使用される場合、変更を非公開にすることはできません。
 
-For full details, please refer to the [LICENSE](https://github.com/R0rt1z2/fenrir/tree/master/LICENSE) file.
+詳細については [LICENSE](https://github.com/R0rt1z2/fenrir/tree/master/LICENSE) ファイルを参照してください。
