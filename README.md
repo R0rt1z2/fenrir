@@ -1,6 +1,6 @@
 # fenrir
 
-**Language:** [Japanese](README_ja-JP.md)
+**Language:** [日本語](README_ja-JP.md)
 
 This is a PoC exploit for a vulnerability in the Nothing Phone (2a) / CMF Phone 1 secure boot chain (and possibly other MediaTek devices).
 
