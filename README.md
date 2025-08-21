@@ -1,6 +1,8 @@
 # fenrir
 
-This is a PoC exploit for a vulnerability in the Nothing Phone 2a / CMF Phone 1 secure boot chain (and possibly other MediaTek devices).
+Language: [Japanese](README_ja-JP.md)
+
+This is a PoC exploit for a vulnerability in the Nothing Phone (2a) / CMF Phone 1 secure boot chain (and possibly other MediaTek devices).
 
 It abuses a logic flaw where one component isn't properly verified if the seccfg unlock state is set to unlocked.
 
@@ -82,7 +84,7 @@ After building, you should see a new file named `lk.patched` in the root directo
 > If fastboot mode is not available on your device, you might have to use another method to flash the output image. The provided script assumes fastboot mode is available.
 
 ## Status
-Currently, only the Nothing Phone 2a (`Pacman`) is supported by the exploit. The exploit is also known to work on the CMF Phone 1 (`Tetris`), but support for that device is still incomplete.
+Currently, only the Nothing Phone (2a) (`Pacman`) is supported by the exploit. The exploit is also known to work on the CMF Phone 1 (`Tetris`), but support for that device is still incomplete.
 
 Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
