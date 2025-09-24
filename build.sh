@@ -72,8 +72,9 @@ echo -e "${YELLOW}Injecting payload...${NC}"
 
 echo
 
-if [ -f "lk.patched" ]; then
-   echo -e "${GREEN}Successfully injected payload into bootloader: ${BLUE}$BOOTLOADER${NC}"
+if [ -f "${DEVICE_LOWER}-fenrir.bin" ]; then
+   echo -e "${GREEN}Operation completed successfully!${NC}"
+   echo -e "${WHITE}Patched bootloader saved as: ${BOLD}${DEVICE_LOWER}-fenrir.bin${NC}"
 else
     echo -e "${RED}Injection failed or output file not found!${NC}"
     exit 1

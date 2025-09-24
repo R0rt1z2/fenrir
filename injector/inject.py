@@ -13,7 +13,7 @@ def main() -> int:
     parser.add_argument('device', help='Device name')
     parser.add_argument('image', help='Bootloader image path', nargs='?')
     parser.add_argument(
-        '-o', '--output', help='Output file path', default='lk.patched'
+        '-o', '--output', help='Output file path', default=None
     )
     parser.add_argument('--config', '-c', help='JSON configuration file')
     parser.add_argument(
@@ -29,6 +29,9 @@ def main() -> int:
     )
 
     args: argparse.Namespace = parser.parse_args()
+
+    if args.output is None:
+        args.output = f"{args.device.lower()}-fenrir.bin"
 
     if args.list_stages and not args.image:
         for dev in DEVICES:
