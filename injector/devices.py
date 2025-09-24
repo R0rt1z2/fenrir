@@ -130,18 +130,6 @@ DEVICES = [
         'Tetris',
         'CMF Phone 1',
         {
-            # Ideally, we'd make room in the 'lk' partition for the payload, but for the sake
-            # of this demonstration, we take advantage of the fact that the BSP for this phone     
-            # includes a lot of eMMC-related code that isn’t actually used, since this device 
-            # uses UFS instead.                                                               
-            #                                                                                 
-            # Technically, these stages are not required by the exploit. They simply show    
-            # that we can execute arbitrary code within the LK image, which is way cooler    
-            # than just applying patches.                                                    
-            #                                                                                 
-            # The first address is the virtual base address where the stage payload is       
-            # injected. The second address is the address of the `bl` call that we override  
-            # to jump to the payload instead (called pivot by me, which is probably wrong).
             'stage1': PayloadStage(
                 'stage1',
                 0xFFFF000050777F60,  # emmc_init()
@@ -160,51 +148,14 @@ DEVICES = [
                 0xFFFF000050710614, # bl dprintf("%s:%d: Notify boot linux.\n")
                 description='Linux initialization stage',
             ),
-
-            # This is what makes it possible for this exploit to work. Long
-            # story short, an LK image has various partitions inside it,
-            # which each have a specific purpose and get loaded at a specific
-            # address. The order matters, and each partition verifies the next
-            # one before loading it.
-            #
-            # From my analysis, the boot chain of this device is as follows:
-            # 1. BootROM (SoC)
-            # 2. Preloader
-            # 3. bl2_ext (LK)
-            # 4. TEE
-            # 5. GenieZone (GZ)
-            # 6. lk or aee (LK)
-            # 7. Linux kernel (boot)
-            # 8. ...
-            #
-            # BootROM is the first stage and is not modifiable (it's masked ROM) and
-            # it ALWAYS verifies and loads the Preloader against the fused root key. 
-            # Then, under normal circumstances, the Preloader verifies and loads bl2_ext, 
-            # which is the first partition of 'lk' to get verified and loaded. Then
-            # bl2_ext takes control of the boot process and verifies and loads
-            # the next partitions: TEE, GZ, LK, and so on.
-            #
-            # HOWEVER, this is not the case when seccfg is unlocked. When this
-            # happens, the Preloader DOES NOT verify bl2_ext even though bl2_ext
-            # itself still verifies the subsequent partitions. This means that one
-            # can arbitrarily modify bl2_ext so it does not verify the next
-            # partitions, which would lead to a full takeover of the secure boot chain.
             'sec_get_vfy_policy': PatchStage(
                 'sec_get_vfy_policy',
                 pattern='00 01 00 b4 fd 7b bf a9',
                 replacement='00 00 80 52 c0 03 5f d6',
-                # This is because every partition inside the LK image has its own function
-                # that is called to verify the next partition. We take advantage of the fact
-                # that the signature of the function is always the same, so we can apply the
-                # patch to all of them at once.
                 match_mode=MatchMode.ALL,
                 description='Don\'t enforce secure boot policy',
             ),
         },
-
-        # This is the virtual address where 'lk' (not the image but the partition)
-        # is loaded in memory. You can obtain this address by looking at the
-        # 'expdb' partition of the device, which contains boot logs.
         base=0xFFFF000050700000
     )
 ]
