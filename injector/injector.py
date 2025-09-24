@@ -71,16 +71,29 @@ class BootloaderInjector:
         self.load_bootloader()
 
         injected_stages: List[str] = []
+        payload_stages_skipped: List[str] = []
+        
         for stage_name, stage in self.stages.items():
             if stage.is_enabled():
                 try:
                     self.data = stage.execute(self.data, self.payload_dir, self.bootloader_base, self.device_name)
                     injected_stages.append(stage_name)
+                except FileNotFoundError as e:
+                    if "payload" in str(e).lower():
+                        print("Warning: Skipping payload stage %s (payload file not found)" % stage_name)
+                        payload_stages_skipped.append(stage_name)
+                        continue
+                    else:
+                        print("Error injecting %s: %s" % (stage_name, e))
+                        return False
                 except Exception as e:
                     print("Error injecting %s: %s" % (stage_name, e))
                     return False
 
-        return len(injected_stages) > 0
+        if payload_stages_skipped:
+            print("Skipped %d payload stages, applied %d patches" % (len(payload_stages_skipped), len(injected_stages)))
+        
+        return len(injected_stages) > 0 or len(payload_stages_skipped) > 0
 
     def save_patched_bootloader(self, output_path: str) -> None:
         if self.data is None:

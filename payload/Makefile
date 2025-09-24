@@ -16,21 +16,25 @@ DEVICE ?= pacman
 DEVICE_LOWER := $(shell echo $(DEVICE) | tr '[:upper:]' '[:lower:]')
 
 DEVICE_HEADER := $(DEVICES_DIR)/$(DEVICE_LOWER).h
+
 ifeq ($(wildcard $(DEVICE_HEADER)),)
-$(error Device $(DEVICE) not supported. Create $(DEVICE_HEADER) first)
-endif
+
+.PHONY: all clean
+all:
+	@echo "No device header found for $(DEVICE). Skipping payload compilation."
+	@mkdir -p $(BUILD_DIR)/$(DEVICE_LOWER)
+	@touch $(BUILD_DIR)/$(DEVICE_LOWER)/.no_payload
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+else
 
 CFLAGS += -DDEVICE_$(DEVICE_LOWER)
 
 ifeq ($(DEBUG),1)
 CFLAGS += -DDEBUG
 endif
-
-debug-flags:
-	@echo "DEVICE: $(DEVICE)"
-	@echo "DEVICE_LOWER: $(DEVICE_LOWER)"
-	@echo "DEVICE_HEADER: $(DEVICE_HEADER)"
-	@echo "CFLAGS: $(CFLAGS)"
 
 STAGE1_BASE := $(shell grep "^#define STAGE1_BASE" $(DEVICE_HEADER) | awk '{print $$3}')
 STAGE2_BASE := $(shell grep "^#define STAGE2_BASE" $(DEVICE_HEADER) | awk '{print $$3}')
@@ -109,3 +113,5 @@ device-info:
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+endif

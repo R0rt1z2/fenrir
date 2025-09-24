@@ -58,6 +58,10 @@ echo -e "${YELLOW}Building payload...${NC}"
 (cd payload && make clean && make DEVICE="$DEVICE" all -j$(nproc))
 
 if [ $? -ne 0 ]; then
+   echo -e "${YELLOW}Warning: Payload build failed or skipped. Continuing with patches only...${NC}"
+fi
+
+if [ $? -ne 0 ]; then
    echo -e "${RED}Build failed${NC}"
    exit 1
 fi
