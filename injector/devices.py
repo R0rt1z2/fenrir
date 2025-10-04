@@ -179,6 +179,30 @@ DEVICES = [
           match_mode=MatchMode.ALL,
           description='Prevent LK from relocking seccfg',
           ),
+           # Add these additional patches to your Tetris config:
+           'bypass_all_cbz_w0': PatchStage(
+            'bypass_all_cbz_w0',
+            pattern='00 01 00 34',  # CBZ W0 (any remaining verification)
+            replacement='1f 20 03 d5',  # NOP
+            match_mode=MatchMode.ALL,
+            description='Bypass all remaining CBZ W0 verification checks',
+           ),
+
+           'bypass_all_cmp_w0': PatchStage(
+            'bypass_all_cmp_w0', 
+            pattern='1f 00 00 71',  # CMP W0, #0
+            replacement='1f 20 03 d5',  # NOP  
+            match_mode=MatchMode.ALL,
+            description='Bypass all CMP W0 checks',
+            ),
+
+           'force_success_returns': PatchStage(
+            'force_success_returns',
+            pattern='20 00 80 52',  # MOV W0, #1 (failure)
+            replacement='00 00 80 52',  # MOV W0, #0 (success) 
+            match_mode=MatchMode.ALL,
+            description='Force all verification functions to return success',
+            ),
     },
     base=0xFFFF000050700000
 ),
