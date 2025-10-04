@@ -166,12 +166,12 @@ DEVICES = [
             description='Force lock state to always be LKS_LOCK',
         ),
         'bypass_security_control': PatchStage(
-            'bypass_security_control',
-            pattern='24 74 01 94 20 01 00 36',
-            replacement='24 74 01 94 1f 20 03 d5',
-            match_mode=MatchMode.ALL,
-            description='Skip security error branch - always execute commands',
-        ),
+         'bypass_security_control',
+         pattern='17 97 01 94 20 01 00 36',  # Correct pattern for your Tetris
+         replacement='17 97 01 94 1f 20 03 d5',  # NOP instead of TBZ
+         match_mode=MatchMode.ALL,
+         description='Skip security error branch - always execute commands',
+         ),
     },
     base=0xFFFF000050700000
 ),
