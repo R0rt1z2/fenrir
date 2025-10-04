@@ -125,22 +125,22 @@ DEVICES = [
     {
         # Added PayloadStages for proper boot initialization (avoids bootloop)
         'stage1': PayloadStage(
-            'stage1',
-            0xFFFF000050777F60,  # STAGE1_BASE from tetris.h
-            0xFFFF000050703498,  # PLATFORM_INIT_ADDR - platform_init()
-            description='Pre-platform initialization stage - fixes bootloop',
-        ),
-        'stage2': PayloadStage(
-            'stage2',
-            0xFFFF000050773578,  # STAGE2_BASE from tetris.h
-            0xFFFF000050708320,  # NOTIFY_ENTER_FASTBOOT_ADDR - notify_enter_fastboot()
-            description='Pre-fastboot initialization stage',
-        ),
-        'stage3': PayloadStage(
-            'stage3',
-            0xFFFF000050774884,  # STAGE3_BASE from tetris.h
-            0xFFFF000050710464,  # NOTIFY_BOOT_LINUX_ADDR - notify_boot_linux()
-            description='Linux initialization stage',
+                'stage1',
+                0xFFFF000050777F60,  # emmc_init()
+                0xFFFF000050707698,  # platform_init()
+                description='Pre-platform initialization stage',
+            ),
+            'stage2': PayloadStage(
+                'stage2',
+                0xFFFF000050773578, # msdc_tune_cmdrsp()
+                0xFFFF0000507105F8, # bl notify_enter_fastboot()
+                description='Pre-fastboot initialization stage',
+            ),
+            'stage3': PayloadStage(
+                'stage3',
+                0xFFFF000050774884, # msdc_config_bus()
+                0xFFFF000050710614, # bl dprintf("%s:%d: Notify boot linux.\n")
+                description='Linux initialization stage',
         ),
         # Existing PatchStages (keep these)
         'sec_get_vfy_policy': PatchStage(
