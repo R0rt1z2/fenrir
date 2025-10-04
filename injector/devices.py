@@ -126,9 +126,6 @@ DEVICES = [
             match_mode=MatchMode.ALL,
             description='Skip security error branch - always execute commands',
         )
-    },
-    base=0xFFFF000050700000
-),
         },
 
         # This is the virtual address where 'lk' (not the image but the partition)
