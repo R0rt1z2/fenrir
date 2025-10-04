@@ -118,7 +118,17 @@ DEVICES = [
                 replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force lock state to always be LKS_LOCK',
-            )
+            ),
+            'bypass_security_control': PatchStage(
+            'bypass_security_control',
+            pattern='24 74 01 94 20 01 00 36',
+            replacement='24 74 01 94 1f 20 03 d5',  # NOP instead of branch
+            match_mode=MatchMode.ALL,
+            description='Skip security error branch - always execute commands',
+        )
+    },
+    base=0xFFFF000050700000
+),
         },
 
         # This is the virtual address where 'lk' (not the image but the partition)
@@ -157,10 +167,17 @@ DEVICES = [
                 replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force lock state to always be LKS_LOCK',
-            )
-        },
-        base=0xFFFF000050700000
-    ),
+            ),
+            'bypass_security_control': PatchStage(
+            'bypass_security_control',
+            pattern='24 74 01 94 20 01 00 36',
+            replacement='24 74 01 94 1f 20 03 d5',  # NOP instead of branch
+            match_mode=MatchMode.ALL,
+            description='Skip security error branch - always execute commands',
+        ),
+    },
+    base=0xFFFF000050700000
+),
     Device(
         'LG8n',
         'Tecno Pova 4 Pro',
