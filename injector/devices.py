@@ -144,13 +144,6 @@ DEVICES = [
             match_mode=MatchMode.ALL,
             description="Don't enforce secure boot policy",
         ),
-        'force_green_state': PatchStage(
-            'force_green_state',
-            pattern='68 04 00 f0 00 d9 04 b9 c0 03 5f d6',
-            replacement='68 04 00 f0 1f d9 04 b9 c0 03 5f d6',
-            match_mode=MatchMode.ALL,
-            description='Force boot state to always be set to green',
-        ),
         'spoof_sboot_state': PatchStage(
             'spoof_sboot_state',
             pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 20 00 80 52 c4 ff ff 97 e8 03 00 2a e0 03 1f 2a 68 02 00 b9',
@@ -165,20 +158,48 @@ DEVICES = [
             match_mode=MatchMode.ALL,
             description='Force lock state to always be LKS_LOCK',
         ),
-        'bypass_security_control': PatchStage(
-         'bypass_security_control',
-         pattern='17 97 01 94 20 01 00 36',  # Correct pattern for your Tetris
-         replacement='17 97 01 94 1f 20 03 d5',  # NOP instead of TBZ
-         match_mode=MatchMode.ALL,
-         description='Skip security error branch - always execute commands',
-         ),
          'dont_relock_seccfg': PatchStage(
-          'dont_relock_seccfg',
-          pattern='f4 03 01 2a f3 03 00 2a 28 00 80 52',  # Corrected pattern for your Tetris
-          replacement='00 00 80 52 c0 03 5f d6 1f 20 03 d5',  # MOV W0,#0; RET; NOP
-          match_mode=MatchMode.ALL,
-          description='Prevent LK from relocking seccfg',
-          ),
+             'dont_relock_seccfg',
+             pattern='f4 03 01 2a f3 03 00 2a 28 00 80 52',  # Corrected pattern for your Tetris
+             replacement='00 00 80 52 c0 03 5f d6 1f 20 03 d5',  # MOV W0,#0; RET; NOP
+             match_mode=MatchMode.ALL,
+             description='Prevent LK from relocking seccfg',
+        ),
+           # Skip security error checks by disabling branch instructions that cause rollback
+          'bypass_security_control': PatchStage(
+             'bypass_security_control',
+            pattern='88 32 40 b9 1f 01 00 71 6c 00 00 54',  # ARM64 LDR, CMP, B.NE pattern typical in security check
+            replacement='88 32 40 b9 1f 01 00 71 1f 20 03 d5',  # Replace conditional branch with NOP
+            match_mode=MatchMode.ALL,
+            description='Tetris-specific bypass security control',
+        ),
+
+            # Force unlocked boot state (green state) regardless of actual state
+           'force_green_state': PatchStage(
+              'force_green_state',
+              pattern='88 07 00 d0 00 e1 00 b9 c0 03 5f d6',  # Typical ADRP+STR+RET setting boot state
+              replacement='88 07 00 d0 1f 00 80 52 c0 03 5f d6',  # Change MOV W0 to 0 (success)
+              match_mode=MatchMode.ALL,
+              description='Tetris-specific force green state',
+         ),
+
+            # Bypass verification result branch (CBZ W0) to prevent security check failures
+             'bypass_cbz_w0': PatchStage(
+                'bypass_cbz_w0',
+               pattern='00 01 00 34',  # CBZ W0 instruction
+               replacement='1f 20 03 d5',  # NOP
+               match_mode=MatchMode.ALL,
+               description='Tetris-specific bypass cbz w0',
+         ),
+
+            # Bypass comparison (CMP) result checks to skip validation
+             'bypass_cmp_w0': PatchStage(
+                'bypass_cmp_w0',
+                pattern='1f 00 00 71',  # CMP W0, 0 instruction
+                replacement='1f 20 03 d5',  # NOP
+                match_mode=MatchMode.ALL,
+                description='Tetris-specific bypass cmp w0',
+         ),
     },
     base=0xFFFF000050700000
 ),
