@@ -120,33 +120,67 @@ DEVICES = [
         base=0xFFFF000050F00000,
     ),
     Device(
-        'Tetris',
-        'CMF Phone 1',
-        {
-            'sec_get_vfy_policy': PatchStage(
-                'sec_get_vfy_policy',
-                pattern='00 01 00 b4 fd 7b bf a9',
-                replacement='00 00 80 52 c0 03 5f d6',
-                match_mode=MatchMode.ALL,
-                description='Don\'t enforce secure boot policy',
-            ),
-            'force_green_state': PatchStage(
-                'force_green_state',
-                pattern='68 04 00 f0 00 d9 04 b9 c0 03 5f d6',
-                replacement='68 04 00 f0 1f d9 04 b9 c0 03 5f d6',
-                match_mode=MatchMode.ALL,
-                description='Force boot state to always be set to green',
-            ),
-            'spoof_sboot_state': PatchStage(
-                'spoof_sboot_state',
-                pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 20 00 80 52 c4 ff ff 97 e8 03 00 2a e0 03 1f 2a 68 02 00 b9',
-                replacement='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 48 04 80 52 68 02 00 b9 e0 03 1f 2a f3 0b 40 f9 fd 7b c2 a8',
-                match_mode=MatchMode.ALL,
-                description='Force sboot state to always be ATTR_SBOOT_ONLY_ENABLE_ON_SCHIP',
-            )  
-        },
-        base=0xFFFF000050700000
-    ),
+    'Tetris',
+    'CMF Phone 1',
+    {
+        # Added PayloadStages for proper boot initialization (avoids bootloop)
+        'stage1': PayloadStage(
+            'stage1',
+            0xFFFF000050777F60,  # STAGE1_BASE from tetris.h
+            0xFFFF000050703498,  # PLATFORM_INIT_ADDR - platform_init()
+            description='Pre-platform initialization stage - fixes bootloop',
+        ),
+        'stage2': PayloadStage(
+            'stage2',
+            0xFFFF000050773578,  # STAGE2_BASE from tetris.h
+            0xFFFF000050708320,  # NOTIFY_ENTER_FASTBOOT_ADDR - notify_enter_fastboot()
+            description='Pre-fastboot initialization stage',
+        ),
+        'stage3': PayloadStage(
+            'stage3',
+            0xFFFF000050774884,  # STAGE3_BASE from tetris.h
+            0xFFFF000050710464,  # NOTIFY_BOOT_LINUX_ADDR - notify_boot_linux()
+            description='Linux initialization stage',
+        ),
+        # Existing PatchStages (keep these)
+        'sec_get_vfy_policy': PatchStage(
+            'sec_get_vfy_policy',
+            pattern='00 01 00 b4 fd 7b bf a9',
+            replacement='00 00 80 52 c0 03 5f d6',
+            match_mode=MatchMode.ALL,
+            description='Disable secure boot policy',
+        ),
+        'force_green_state': PatchStage(
+            'force_green_state',
+            pattern='68 04 00 f0 00 d9 04 b9 c0 03 5f d6',
+            replacement='68 04 00 f0 1f d9 04 b9 c0 03 5f d6',
+            match_mode=MatchMode.ALL,
+            description='Force boot state to green',
+        ),
+        'spoof_sboot_state': PatchStage(
+            'spoof_sboot_state',
+            pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 20 00 80 52 c4 ff ff 97 e8 03 00 2a e0 03 1f 2a 68 02 00 b9',
+            replacement='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 48 04 80 52 68 02 00 b9 e0 03 1f 2a f3 0b 40 f9 fd 7b c2 a8',
+            match_mode=MatchMode.ALL,
+            description='Spoof sboot state',
+        ),
+        'spoof_lock_state': PatchStage(
+            'spoof_lock_state',
+            pattern='20 02 00 b4 fd 7b be a9 f3 0b 00 f9 fd 03 00 91',
+            replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
+            match_mode=MatchMode.ALL,
+            description='Spoof lock state',
+        ),
+        'bypass_security_control': PatchStage(
+            'bypass_security_control',
+            pattern='24 74 01 94 20 01 00 36',
+            replacement='24 74 01 94 1f 20 03 d5',
+            match_mode=MatchMode.ALL,
+            description='Skip security error branch',
+        ),
+    },
+    base=0xFFFF000050700000,
+),
     Device(
         'LG8n',
         'Tecno Pova 4 Pro',
