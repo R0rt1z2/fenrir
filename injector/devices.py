@@ -172,6 +172,13 @@ DEVICES = [
          match_mode=MatchMode.ALL,
          description='Skip security error branch - always execute commands',
          ),
+         'dont_relock_seccfg': PatchStage(
+          'dont_relock_seccfg',
+          pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 2a 28 00 80 52',
+          replacement='00 00 80 52 c0 03 5f d6 1f 20 03 d5 1f 20 03 d5 1f 20 03 d5',
+          match_mode=MatchMode.ALL,
+          description='Prevent LK from relocking seccfg',
+          ),
     },
     base=0xFFFF000050700000
 ),
