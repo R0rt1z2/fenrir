@@ -118,7 +118,8 @@ DEVICES = [
                 replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force lock state to always be LKS_LOCK',
-            )
+            ),
+            
         },
 
         # This is the virtual address where 'lk' (not the image but the partition)
@@ -143,6 +144,13 @@ DEVICES = [
                 replacement='68 04 00 f0 1f d9 04 b9 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force boot state to always be set to green',
+            ),
+            'bypass_cbnz_w0': PatchStage(
+            'bypass_cbnz_w0',
+            pattern='00 01 00 35',
+            replacement='1f 20 03 d5',
+            match_mode=MatchMode.ALL,
+            description='Skip CBNZ W0 branches - ALLOWS MODIFIED PARTITIONS',
             ),
         },
         base=0xFFFF000050700000
