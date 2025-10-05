@@ -150,6 +150,20 @@ DEVICES = [
                 replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force lock state to always be LKS_LOCK',
+            ),
+            'bypass_security_control': PatchStage(
+                'bypass_security_control',
+                pattern='c8 e2 40 b9 1f 05 00 71 21 04 00 54',
+                replacement='c8 e2 40 b9 1f 05 00 71 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Bypass security control check - replaces conditional branch with NOP',
+            ),
+            'dont_relock_seccfg': PatchStage(
+                'dont_relock_seccfg',
+                pattern='60 05 00 d0 00 38 09 91 1f 7d 01 94 28 00 80 52 68 02 00 b9',
+                replacement='60 05 00 d0 00 38 09 91 1f 7d 01 94 08 00 80 52 68 02 00 b9',
+                match_mode=MatchMode.ALL,
+                description='Prevent security config relock - changes MOV W8, #1 to MOV W8, #0',
             )
         },
         base=0xFFFF000050700000
