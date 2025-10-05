@@ -164,6 +164,13 @@ DEVICES = [
                 replacement='60 05 00 d0 00 38 09 91 1f 7d 01 94 08 00 80 52 68 02 00 b9',
                 match_mode=MatchMode.ALL,
                 description='Prevent security config relock - changes MOV W8, #1 to MOV W8, #0',
+             ),
+            'spoof_sboot_state': PatchStage(
+                'spoof_sboot_state',
+                pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 20 00 80 52 c4 ff ff 97 e8 03 00 2a e0 03 1f 2a 68 02 00 b9',
+                replacement='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 48 04 80 52 68 02 00 b9 e0 03 1f 2a f3 0b 40 f9 fd 7b c2 a8',
+                match_mode=MatchMode.ALL,
+                description='Force sboot state to always be ATTR_SBOOT_ONLY_ENABLE_ON_SCHIP',
             )
         },
         base=0xFFFF000050700000
