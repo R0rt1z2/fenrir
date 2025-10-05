@@ -131,35 +131,36 @@ DEVICES = [
         'CMF Phone 1',
         {
             'sec_get_vfy_policy': PatchStage(
-                'sec_get_vfy_policy',
-                pattern='00 01 00 b4 fd 7b bf a9',
-                replacement='00 00 80 52 c0 03 5f d6',
-                match_mode=MatchMode.ALL,
-                description='Don\'t enforce secure boot policy',
-            ),
-            'force_green_state': PatchStage(
-                'force_green_state',
-                pattern='68 04 00 f0 00 d9 04 b9 c0 03 5f d6',
-                replacement='68 04 00 f0 1f d9 04 b9 c0 03 5f d6',
-                match_mode=MatchMode.ALL,
-                description='Force green state',
-            ),
+        'sec_get_vfy_policy',
+    pattern='00 01 00 b4 fd 7b bf a9',
+    replacement='00 00 80 52 c0 03 5f d6',
+    match_mode=MatchMode.ALL,
+    description="Don't enforce secure boot policy",
+),
 
-             'spoof_lock_state': PatchStage(
-                 'spoof_lock_state',
-                 pattern='20 02 00 b4',
-                 replacement='1f 20 03 d5',
-                 match_mode=MatchMode.ALL,
-                 description='Skip lock state check',
-            ),
+'force_green_state': PatchStage(
+    'force_green_state',
+    pattern='68 04 00 f0 00 d9 04 b9 c0 03 5f d6',
+    replacement='68 04 00 f0 1f d9 04 b9 c0 03 5f d6',
+    match_mode=MatchMode.ALL,
+    description='Force green state',
+),
 
-              'spoof_sboot_state': PatchStage(
-                  'spoof_sboot_state',
-                  pattern='c4 ff ff 97 e8 03 00 2a e0 03 1f 2a',
-                  replacement='1f 20 03 d5 08 00 80 52 e0 03 1f 2a',
-                  match_mode=MatchMode.ALL,
-                  description='Skip function call, set sboot state to 0',
-            )
+'spoof_lock_state': PatchStage(
+    'spoof_lock_state',
+    pattern='20 02 00 b4',
+    replacement='1f 20 03 d5',
+    match_mode=MatchMode.ALL,
+    description='Skip lock state check (CBZ->NOP)',
+),
+
+'spoof_sboot_state': PatchStage(
+    'spoof_sboot_state',
+    pattern='c4 ff ff 97 e8 03 00 2a e0 03 1f 2a',
+    replacement='1f 20 03 d5 08 00 80 52 e0 03 1f 2a',
+    match_mode=MatchMode.ALL,
+    description='Skip sboot call, set state=0',
+),
             
         },
         base=0xFFFF000050700000
