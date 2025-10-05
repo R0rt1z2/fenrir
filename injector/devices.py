@@ -131,7 +131,6 @@ DEVICES = [
         'CMF Phone 1',
         {
             'sec_get_vfy_policy': PatchStage(
-        'sec_sec_get_vfy_policy': PatchStage(
                 'sec_get_vfy_policy',
                 pattern='00 01 00 b4 fd 7b bf a9',
                 replacement='00 00 80 52 c0 03 5f d6',
