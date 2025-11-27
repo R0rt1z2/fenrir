@@ -4,3 +4,4 @@ payload/build/
 *.patched
 *.bin
 settings.json
+bin/*.raw
