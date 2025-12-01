@@ -20,24 +20,24 @@ DEVICES = [
             # The first address is the virtual base address where the stage payload is       
             # injected. The second address is the address of the `bl` call that we override  
             # to jump to the payload instead (called pivot by me, which is probably wrong).
-            'stage1': PayloadStage(
-                'stage1',
-                0xFFFF000050F6F0A8,  # emmc_init()
-                0xFFFF000050F05DA4,  # platform_init()
-                description='Pre-platform initialization stage',
-            ),
-            'stage2': PayloadStage(
-                'stage2',
-                0xFFFF000050F6AE98, # msdc_tune_cmdrsp()
-                0xFFFF000050F0E088, # bl notify_enter_fastboot()
-                description='Pre-fastboot initialization stage',
-            ),
-            'stage3': PayloadStage(
-                'stage3',
-                0xFFFF000050F6C168, # msdc_config_bus()
-                0xFFFF000050F0E0A4, # bl dprintf("%s:%d: Notify boot linux.\n")
-                description='Linux initialization stage',
-            ),
+            #'stage1': PayloadStage(
+            #    'stage1',
+            #    0xFFFF000050F6F0A8,  # emmc_init()
+            #    0xFFFF000050F05DA4,  # platform_init()
+            #    description='Pre-platform initialization stage',
+            #),
+            #'stage2': PayloadStage(
+            #    'stage2',
+            #    0xFFFF000050F6AE98, # msdc_tune_cmdrsp()
+            #    0xFFFF000050F0E088, # bl notify_enter_fastboot()
+            #    description='Pre-fastboot initialization stage',
+            #),
+            #'stage3': PayloadStage(
+            #    'stage3',
+            #    0xFFFF000050F6C168, # msdc_config_bus()
+            #    0xFFFF000050F0E0A4, # bl dprintf("%s:%d: Notify boot linux.\n")
+            #    description='Linux initialization stage',
+            #),
 
             # This is what makes it possible for this exploit to work. Long
             # story short, an LK image has various partitions inside it,
@@ -93,15 +93,15 @@ DEVICES = [
             # than sorry.
             'force_green_state': PatchStage(
                 'force_green_state',
-                pattern='a8 03 00 f0 00 21 01 b9 c0 03 5f d6',
-                replacement='a8 03 00 f0 1f 21 01 b9 c0 03 5f d6',
+                pattern='c8 03 00 90 00 21 01 b9 c0 03 5f d6',
+                replacement='c8 03 00 90 1f 21 01 b9 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force boot state to always be set to green',
             ),
             'bypass_security_control': PatchStage(
                 'bypass_security_control',
-                pattern='24 74 01 94 20 01 00 36',
-                replacement='24 74 01 94 1f 20 03 d5',
+                pattern='a9 74 01 94 20 01 00 36',
+                replacement='a9 74 01 94 1f 20 03 d5',
                 match_mode=MatchMode.ALL,
                 description='Skip security error branch - always execute commands',
             ),
