@@ -4,6 +4,8 @@
 #include "../devices/pacman.h"
 #elif DEVICE_tetris  
 #include "../devices/tetris.h"
+#elif DEVICE_q25
+#include "../devices/q25.h"
 #else
 #error "Unknown device. Add your device to device_config.h"
 #endif

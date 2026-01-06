@@ -354,6 +354,25 @@ DEVICES = [
         'Q25',
         'Zinwa Q25',
         {
+            'stage1': PayloadStage(
+                'stage1',
+                0xffff000050f23670,  # unknown emmc_init() adjacent func
+                0xffff000050f04a18,  # bl platform_init()
+                description='Pre-platform initialization stage',
+            ),
+            'stage2': PayloadStage(
+                'stage2',
+                0xffff000050f1f690, # msdc_tune_cmdrsp()
+                0xffff000050f0c858, # bl notify_enter_fastboot()
+                description='Pre-fastboot initialization stage',
+            ),
+            'stage3': PayloadStage(
+                'stage3',
+                0xffff000050f209e0, # msdc_config_bus()
+                0xffff000050f0c874, # bl dprintf("%s:%d: Notify boot linux.\n")
+                description='Linux initialization stage',
+            ),
+
             'sec_get_vfy_policy': PatchStage(
                 'sec_get_vfy_policy',
                 pattern='00 01 00 b4 fd 7b bf a9',
