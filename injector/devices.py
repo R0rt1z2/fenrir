@@ -139,8 +139,8 @@ DEVICES = [
             ),
             'force_green_state': PatchStage(
                 'force_green_state',
-                pattern='c8 03 00 90 00 21 01 b9 c0 03 5f d6',
-                replacement='c8 03 00 90 1f 21 01 b9 c0 03 5f d6',
+                pattern='c8 03 00 b0 00 21 01 b9 c0 03 5f d6',
+                replacement='c8 03 00 b0 1f 21 01 b9 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force boot state to always be set to green',
             ),
