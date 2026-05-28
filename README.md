@@ -84,7 +84,20 @@ After building, you should see a new file named `lk.patched` in the root directo
 > If fastboot mode is not available on your device, you might have to use another method to flash the output image. The provided script assumes fastboot mode is available.
 
 ## Status
-Currently, only the Nothing Phone (2a) (`Pacman`) is supported by the exploit. The exploit is also known to work on the CMF Phone 1 (`Tetris`), but support for that device is still incomplete.
+The following devices are currently supported:
+
+| Device | Codename |
+|--------|----------|
+| Nothing Phone (2a) | `Pacman` |
+| Nothing Phone (2a) Plus | `PacmanPro` |
+| CMF Phone 1 | `Tetris` |
+| Tecno Pova 4 | `LG7n` |
+| Tecno Pova 4 Pro | `LG8n` |
+| Tecno Pova 5 | `LH7n` |
+| Zinwa Q25 | `Q25` |
+
+> [!NOTE]
+> Support for the CMF Phone 1 (`Tetris`) is still incomplete.
 
 Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
