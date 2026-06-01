@@ -436,4 +436,67 @@ DEVICES = [
         },
         base=0xFFFF000050F00000
     ),
+    Device(
+        'peridotl',
+        'Lenovo IdeaTab Pro / Xiaoxin Pad Pro 12.7',
+        {
+            'sec_get_vfy_policy': PatchStage(
+                'sec_get_vfy_policy',
+                pattern='00 01 00 b4 fd 7b bf a9',
+                replacement='00 00 80 52 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Don\'t enforce secure boot policy',
+            ),
+            'force_green_state': PatchStage(
+                'force_green_state',
+                pattern='c8 04 00 90 00 f9 03 b9 c0 03 5f d6',
+                replacement='c8 04 00 90 1f f9 03 b9 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Force boot state to always be set to green',
+            ),
+            'bypass_security_control': PatchStage(
+                'bypass_security_control',
+                pattern='88 17 40 b9 c8 01 00 34',
+                replacement='88 17 40 b9 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Skip security error branch - always execute commands',
+            ),
+            'bypass_lock_control': PatchStage(
+                'bypass_lock_control',
+                pattern='1f 0d 00 71 21 01 00 54',
+                replacement='1f 0d 00 71 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Skip lock error branch - always execute commands',
+            ),
+            'spoof_sboot_state': PatchStage(
+                'spoof_get_sboot_state',
+                pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 20 00 80 52',
+                replacement='48 04 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Force sboot state to always be ATTR_SBOOT_ONLY_ENABLE_ON_SCHIP',
+            ),
+            'spoof_lock_state': PatchStage(
+                'spoof_lock_state',
+                pattern='20 02 00 b4 fd 7b be a9 f3 0b 00 f9 fd 03 00 91',
+                replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Force lock state to always be LKS_LOCK',
+            ),
+            'bypass_region_check': PatchStage(
+                'bypass_region_check',
+                pattern='ff 03 01 d1 fd 7b 01 a9 f5 13 00 f9 f4 4f 03 a9 fd 43 00 91 f3 03 00 aa bf c3 1f b8',
+                replacement='00 00 80 52 c0 03 5f d6 f5 13 00 f9 f4 4f 03 a9 fd 43 00 91 f3 03 00 aa bf c3 1f b8',
+                match_mode=MatchMode.ALL,
+                description='Skip region check - allow crossflashing',
+            ),
+            'avb_allow_verification_error': PatchStage(
+                'avb_allow_verification_error',
+                pattern='e1 07 9f 1a fa 17 9f 1a 15 05 88 1a',
+                replacement='e1 07 9f 1a 3a 00 80 52 15 05 88 1a',
+                match_mode=MatchMode.ALL,
+                description='Force AVB_SLOT_VERIFY_FLAGS_ALLOW_VERIFICATION_ERROR',
+            ),
+        },
+        base=0xFFFF000050700000
+    ),
 ]
