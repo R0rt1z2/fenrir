@@ -499,4 +499,22 @@ DEVICES = [
         },
         base=0xFFFF000050700000
     ),
+    Device(
+        'Tetris',
+        'CMF Phone 1 by Nothing',
+        {
+            # Verified on build 2408282341, Android 14 (SDK 34)
+            # lk_a SHA256: 7bd0be99905183ab86db04a5afe2aed36efc66c5aa60b8bf87ba80555908224b
+            # Only sec_get_vfy_policy patched — 3 sites in bl2_ext, 3 bytes changed total.
+            # No additional patches added — unverified on this device.
+            'sec_get_vfy_policy': PatchStage(
+                'sec_get_vfy_policy',
+                pattern='20 00 80 52 c0 03 5f d6',
+                replacement='00 00 80 52 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Don\'t enforce secure boot policy',
+            ),
+        },
+        base=0xFFFF000050700000,
+    ),
 ]
