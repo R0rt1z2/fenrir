@@ -64,6 +64,11 @@ graph LR
 The actual exploit just patches `sec_get_vfy_policy()` to always return 0, so an unverified `bl2_ext` running at EL3 now happily loads unverified images for the rest of the boot chain.
 
 ## Usage
+The injector is built on top of [`liblk`](https://github.com/R0rt1z2/liblk), install it first:
+```bash
+pip install -r requirements.txt
+```
+
 Place your bootloader image in the `bin/` directory with your device codename (e.g., `bin/pacman.bin`)
 
 Once you have your bootloader image ready, you can build the exploit using the provided `build.sh` script:

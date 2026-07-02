@@ -118,13 +118,8 @@ DEVICES = [
                 replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
                 match_mode=MatchMode.ALL,
                 description='Force lock state to always be LKS_LOCK',
-            )
+            ),
         },
-
-        # This is the virtual address where 'lk' (not the image but the partition)
-        # is loaded in memory. You can obtain this address by looking at the
-        # 'expdb' partition of the device, which contains boot logs.
-        base=0xFFFF000050F00000,
     ),
     Device(
         'PacmanPro',
@@ -166,7 +161,6 @@ DEVICES = [
                 description='Force lock state to always be LKS_LOCK',
             )
         },
-        base=0xFFFF000050F00000,
     ),
     Device(
         'Tetris',
@@ -201,7 +195,6 @@ DEVICES = [
                 description='Force lock state to always be LKS_LOCK',
             )
         },
-        base=0xFFFF000050700000
     ),
     Device(
         'LG8n',
@@ -268,7 +261,6 @@ DEVICES = [
                 description='Prevent LK from relocking seccfg',
             ),
         },
-        base=0xFFFF000050F00000
     ),
     Device(
         'LH7n',
@@ -317,7 +309,6 @@ DEVICES = [
                 description='Prevent LK from relocking seccfg',
             )
         },
-        base=0xFFFF000050F00000
     ),
     Device(
         'LG7n',
@@ -366,7 +357,6 @@ DEVICES = [
                 description='Prevent LK from relocking seccfg',
             ),
         },
-        base=0xFFFF000050F00000
     ),
     Device(
         'Q25',
@@ -434,7 +424,6 @@ DEVICES = [
                 description='Prevent LK from relocking seccfg',
             ),
         },
-        base=0xFFFF000050F00000
     ),
     Device(
         'peridotl',
@@ -497,7 +486,6 @@ DEVICES = [
                 description='Force AVB_SLOT_VERIFY_FLAGS_ALLOW_VERIFICATION_ERROR',
             ),
         },
-        base=0xFFFF000050700000
     ),
     Device(
         'S666LN',
@@ -546,6 +534,6 @@ DEVICES = [
                 description='Prevent LK from relocking seccfg',
             )
         },
-        base=0xFFFF000050F00000
+        cert_bypass=True
     ),
 ]

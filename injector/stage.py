@@ -1,8 +1,21 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Any, Tuple, Union
-from utils import inject_payload, HDR_SIZE, encode_bl
-from patch_utils import PatternMatcher, MatchMode
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from liblk.image import LkImage
+from liblk.structures.partition import LkPartition
+from patch_utils import MatchMode, PatternMatcher
+from utils import encode_bl, pad_payload
+
+
+@dataclass
+class InjectionContext:
+    image: LkImage
+    lk: LkPartition
+    base: int
+    payload_dir: Path
+    device_name: str
 
 
 class Stage(ABC):
@@ -27,20 +40,26 @@ class Stage(ABC):
     def get_description(self) -> str:
         return self.description
 
-    def execute(self, data: bytearray, payload_dir: Path, bootloader_base: int, device_name: str) -> bytearray:
+    def execute(self, ctx: InjectionContext) -> None:
         if not self.enabled:
-            return data
+            return
 
-        payload: bytes = self.load_payload(payload_dir, device_name)
-        data, payload_vaddr = inject_payload(data, payload, self.base_addr, bootloader_base)
+        payload: bytes = self.load_payload(ctx.payload_dir, ctx.device_name)
+        data: bytearray = bytearray(ctx.lk.data)
 
-        pivot_offset: int = self.pivot_addr - bootloader_base + HDR_SIZE
-        branch_inst: bytes = encode_bl(self.pivot_addr, payload_vaddr)
-        data[pivot_offset:pivot_offset + 4] = branch_inst
+        payload_off: int = self.base_addr - ctx.base
+        if payload_off < 0 or payload_off + len(payload) > len(data):
+            raise ValueError("Target address 0x%X is outside 'lk' partition bounds" % self.base_addr)
+        data[payload_off:payload_off + len(payload)] = payload
 
-        print("Successfully injected stage '%s' at 0x%08X with pivot at 0x%08X" % (self.name, self.base_addr, self.pivot_addr))
+        pivot_off: int = self.pivot_addr - ctx.base
+        if pivot_off < 0 or pivot_off + 4 > len(data):
+            raise ValueError("Pivot address 0x%X is outside 'lk' partition bounds" % self.pivot_addr)
+        data[pivot_off:pivot_off + 4] = encode_bl(self.pivot_addr, self.base_addr)
 
-        return data
+        ctx.lk.data = bytes(data)
+
+        print("Injected stage '%s'" % self.name)
 
 
 class PayloadStage(Stage):
@@ -52,12 +71,12 @@ class PayloadStage(Stage):
         payload_path: Path = payload_dir / device_name.lower() / self.name / self.payload_file
 
         if not payload_path.exists():
-            raise RuntimeError("Payload not found: %s" % payload_path)
+            raise FileNotFoundError("Payload not found: %s" % payload_path)
 
         with open(payload_path, 'rb') as f:
             payload: bytes = f.read()
 
-        return payload.ljust((len(payload) + 15) & ~15, b'\x00')
+        return pad_payload(payload)
 
 
 class CustomPayloadStage(Stage):
@@ -67,12 +86,12 @@ class CustomPayloadStage(Stage):
 
     def load_payload(self, payload_dir: Path, device_name: str) -> bytes:
         if not self.payload_path.exists():
-            raise RuntimeError("Custom payload not found: %s" % self.payload_path)
+            raise FileNotFoundError("Custom payload not found: %s" % self.payload_path)
 
         with open(self.payload_path, 'rb') as f:
             payload: bytes = f.read()
 
-        return payload.ljust((len(payload) + 15) & ~15, b'\x00')
+        return pad_payload(payload)
 
 
 class InlinePayloadStage(Stage):
@@ -81,45 +100,90 @@ class InlinePayloadStage(Stage):
         self.payload_data: bytes = payload_data
 
     def load_payload(self, payload_dir: Path, device_name: str) -> bytes:
-        return self.payload_data.ljust((len(self.payload_data) + 15) & ~15, b'\x00')
+        return pad_payload(self.payload_data)
 
 
 class PatchStage(Stage):
-    def __init__(self, name: str, pattern: Union[str, bytes], replacement: Union[str, bytes], 
-                 match_mode: Union[int, MatchMode] = MatchMode.FIRST, description: str = "", **kwargs: Any) -> None:
+    def __init__(self, name: str, pattern: Union[str, bytes], replacement: Union[str, bytes],
+                 match_mode: Union[int, MatchMode] = MatchMode.FIRST, partition: Optional[str] = None,
+                 description: str = "", **kwargs: Any) -> None:
         super().__init__(name, 0, 0, description=description, **kwargs)
-        
+
         if isinstance(pattern, str):
             self.pattern: bytes = PatternMatcher.hex_to_bytes(pattern)
         else:
             self.pattern = pattern
-            
+
         self.match_mode: Union[int, MatchMode] = match_mode
+        self.partition: Optional[str] = partition
         self.replacement: bytes = self._process_replacement(replacement)
 
     def _process_replacement(self, replacement: Union[str, bytes]) -> bytes:
         if isinstance(replacement, bytes):
             return replacement
-        
+
         return PatternMatcher.hex_to_bytes(replacement)
 
     def load_payload(self, payload_dir: Path, device_name: str) -> bytes:
         return b''
 
-    def execute(self, data: bytearray, payload_dir: Path, bootloader_base: int, device_name: str) -> bytearray:
+    def _select_matches(self, matches: List[Tuple[str, int]]) -> List[Tuple[str, int]]:
+        if isinstance(self.match_mode, MatchMode):
+            if self.match_mode == MatchMode.ALL:
+                return matches
+            return matches[:1]
+
+        if self.match_mode == -1:
+            return matches
+        if 0 <= self.match_mode < len(matches):
+            return [matches[self.match_mode]]
+        return []
+
+    def execute(self, ctx: InjectionContext) -> None:
         if not self.enabled:
-            return data
+            return
 
-        patches_applied = PatternMatcher.apply_variable_patch(data, self.pattern, self.replacement, self.match_mode)
-        
-        if patches_applied > 0:
-            match_desc = "all matches" if self.match_mode == -1 or self.match_mode == MatchMode.ALL else "match #%s" % (self.match_mode if isinstance(self.match_mode, int) and self.match_mode >= 0 else 'first')
-            print("Successfully applied patch '%s': %d bytes -> %d bytes (%s)" % 
-                  (self.name, len(self.pattern), len(self.replacement), match_desc))
+        if self.partition is not None:
+            if self.partition not in ctx.image.partitions:
+                print("Warning: partition '%s' not found for patch '%s'" % (self.partition, self.name))
+                return
+            targets: List[Tuple[str, LkPartition]] = [(self.partition, ctx.image.partitions[self.partition])]
         else:
-            print("Warning: Pattern not found for patch '%s'" % self.name)
+            targets = list(ctx.image.partitions.items())
 
-        return data
+        matches: List[Tuple[str, int]] = []
+        for part_name, part in targets:
+            data: bytes = part.data
+            start: int = 0
+            while True:
+                idx: int = data.find(self.pattern, start)
+                if idx == -1:
+                    break
+                matches.append((part_name, idx))
+                start = idx + 1
+
+        selected: List[Tuple[str, int]] = self._select_matches(matches)
+
+        if not selected:
+            print("Warning: Pattern not found for patch '%s'" % self.name)
+            return
+
+        by_partition: Dict[str, List[int]] = {}
+        for part_name, offset in selected:
+            by_partition.setdefault(part_name, []).append(offset)
+
+        applied: int = 0
+        for part_name, offsets in by_partition.items():
+            part = ctx.image.partitions[part_name]
+            data_buf: bytearray = bytearray(part.data)
+            for offset in sorted(offsets, reverse=True):
+                PatternMatcher._apply_single_patch(data_buf, offset, self.pattern, self.replacement)
+                applied += 1
+            part.data = bytes(data_buf)
+
+        match_desc = "all matches" if self.match_mode in (-1, MatchMode.ALL) else "first match" if self.match_mode == MatchMode.FIRST else "match #%s" % self.match_mode
+        print("Successfully applied patch '%s': %d bytes -> %d bytes (%s, %d hit(s))" %
+              (self.name, len(self.pattern), len(self.replacement), match_desc, applied))
 
 
 class StageFactory:
@@ -135,31 +199,32 @@ class StageFactory:
             payload_file: str = config.get("payload_file", "payload.bin")
             return PayloadStage(name, base_addr, pivot_addr, payload_file, description=description, enabled=enabled)
         elif stage_type == "custom":
-            base_addr: int = config["base"]
-            pivot_addr: int = config["pivot"]
+            base_addr = config["base"]
+            pivot_addr = config["pivot"]
             payload_path: str = config["payload_path"]
             return CustomPayloadStage(name, base_addr, pivot_addr, payload_path, description=description, enabled=enabled)
         elif stage_type == "inline":
-            base_addr: int = config["base"]
-            pivot_addr: int = config["pivot"]
+            base_addr = config["base"]
+            pivot_addr = config["pivot"]
             payload_data: bytes = bytes.fromhex(config["payload_hex"])
             return InlinePayloadStage(name, base_addr, pivot_addr, payload_data, description=description, enabled=enabled)
         elif stage_type == "patch":
             pattern: Union[str, bytes] = config["pattern"]
             replacement: Union[str, bytes] = config["replacement"]
+            partition: Optional[str] = config.get("partition")
             match_mode_val = config.get("match_mode", "first")
-            
+
             if isinstance(match_mode_val, str):
                 if match_mode_val.lower() == "all":
-                    match_mode = MatchMode.ALL
+                    match_mode: Union[int, MatchMode] = MatchMode.ALL
                 elif match_mode_val.lower() == "first":
                     match_mode = MatchMode.FIRST
                 else:
                     match_mode = int(match_mode_val)
             else:
                 match_mode = match_mode_val
-            
-            return PatchStage(name, pattern, replacement, match_mode, description=description, enabled=enabled)
+
+            return PatchStage(name, pattern, replacement, match_mode, partition=partition, description=description, enabled=enabled)
         else:
             raise ValueError("Unknown stage type: %s" % stage_type)
 
