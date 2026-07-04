@@ -52,6 +52,44 @@ boot patchlevel path, while OS/vendor patchlevels were taken from the
 Trustonic KeyMint configuration path.  Treat patchlevel spoofing as a separate
 firmware/user-space integration problem.
 
+## Public validation screenshots
+
+Sensitive challenge/test IDs, verified boot hashes, and app signature digests
+are redacted in the screenshots below.
+
+![Play Integrity Strong result](assets/tetris240910/play-integrity-strong.png)
+
+The Play Integrity screenshot shows the real device response after the staged
+Tetris 240910 work:
+
+- labels:
+  `MEETS_BASIC_INTEGRITY`, `MEETS_DEVICE_INTEGRITY`,
+  `MEETS_STRONG_INTEGRITY`;
+- fingerprint:
+  `Nothing/Tetris/Tetris:14/UP1A.231005.007/2409101735:user/release-keys`;
+- brand/device/model:
+  `Nothing` / `Tetris` / `A015`.
+
+![Key Attestation Root of Trust](assets/tetris240910/key-attestation-root-of-trust.png)
+
+The Key Attestation RootOfTrust screenshot shows:
+
+- `Device locked: true`;
+- `Verified boot state: Verified`;
+- `OS_VERSION=140000`;
+- `OS_PATCHLEVEL=202606`;
+- attestation IDs for `Nothing` / `Tetris` / `A015`.
+
+![Key Attestation patchlevels](assets/tetris240910/key-attestation-patchlevels.png)
+
+The lower Key Attestation screenshot shows:
+
+- `OS_PATCHLEVEL=202606`;
+- `VENDOR_PATCHLEVEL=20260605`;
+- `BOOT_PATCHLEVEL=20260405`;
+- attestation IDs for brand `Nothing`, device/product `Tetris`,
+  manufacturer `Nothing`, and model `A015`.
+
 ## Related 240606 finding
 
 On firmware `2406061805`, global Tetris-style patches were risky.  A safer
