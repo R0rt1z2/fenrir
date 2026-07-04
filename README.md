@@ -96,6 +96,7 @@ The following devices are currently supported:
 | Nothing Phone (2a) | `Pacman` |
 | Nothing Phone (2a) Plus | `PacmanPro` |
 | CMF Phone 1 | `Tetris` |
+| CMF Phone 1, U2.6-240910-1735 | `Tetris240910` |
 | Lenovo IdeaTab Pro / Xiaoxin Pad Pro 12.7 | `peridotl` |
 | Tecno Pova 4 | `LG7n` |
 | Tecno Pova 4 Pro | `LG8n` |
@@ -103,7 +104,9 @@ The following devices are currently supported:
 | Zinwa Q25 | `Q25` |
 
 > [!NOTE]
-> Support for the CMF Phone 1 (`Tetris`) is still incomplete.
+> Support for the generic CMF Phone 1 (`Tetris`) profile is still incomplete.
+> For firmware `Tetris_U2.6-240910-1735`, use the exact-hash
+> `Tetris240910` profile and read [docs/tetris.md](docs/tetris.md).
 
 Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 

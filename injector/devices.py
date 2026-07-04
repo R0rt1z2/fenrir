@@ -197,6 +197,75 @@ DEVICES = [
         },
     ),
     Device(
+        'Tetris240910',
+        'CMF Phone 1 / Tetris U2.6-240910-1735',
+        {
+            # Tested on Tetris_U2.6-240910-1735 lk.img.
+            # SHA256: 849fdabc71e39b007e8000f26c5744965b3e24bc076886d0eb0aefea2d87858b
+            #
+            # This profile intentionally avoids the older Tetris MatchMode.ALL
+            # function patches.  Every patch is constrained to one partition and
+            # one expected offset so a firmware drift fails closed instead of
+            # silently patching a nearby table/function.
+            'bl2_ext_lk_policy_table_no_vfy': PatchStage(
+                'bl2_ext_lk_policy_table_no_vfy',
+                partition='bl2_ext',
+                pattern='01 00 00 00 02 00 00 00 01 00 00 00 03 00 00 00',
+                replacement='00 00 00 00 02 00 00 00 00 00 00 00 02 00 00 00',
+                expected_matches=21,
+                match_offsets=[0xAB460],
+                strict_length=True,
+                fail_on_zero=True,
+                description='Clear VFY_EN only for the bl2_ext lk/lk_a/lk_b policy entry',
+            ),
+            'final_unlock_orange_to_green': PatchStage(
+                'final_unlock_orange_to_green',
+                partition='lk',
+                pattern='e8 0f 40 b9 1f 0d 00 71 61 00 00 54 40 00 80 52 9c 01 00 94 8d 01 00 94',
+                replacement='e8 0f 40 b9 1f 0d 00 71 61 00 00 54 00 00 80 52 9c 01 00 94 8d 01 00 94',
+                expected_matches=1,
+                match_offsets=[0x565C4],
+                strict_length=True,
+                fail_on_zero=True,
+                description='Use GREEN instead of ORANGE for the final unlocked-device boot-state setter',
+            ),
+            'rot_device_lock_smc_locked': PatchStage(
+                'rot_device_lock_smc_locked',
+                partition='lk',
+                pattern='00 24 80 52 e1 37 80 b9 f3 43 00 91 02 c1 47 b9 00 40 b8 72',
+                replacement='00 24 80 52 21 00 80 52 f3 43 00 91 02 c1 47 b9 00 40 b8 72',
+                expected_matches=1,
+                match_offsets=[0xA4870],
+                strict_length=True,
+                fail_on_zero=True,
+                description='Pass DEVICE_STATE_LOCKED/1 to the RootOfTrust SMC payload',
+            ),
+            'main_lk_unlocked_literal_to_locked': PatchStage(
+                'main_lk_unlocked_literal_to_locked',
+                partition='lk',
+                pattern='25 6c 6c 78 00 50 75 62 6c 69 73 68 20 70 61 72 74 69 74 69 6f 6e 20 65 72 72 6f 72 2e 00 75 6e 6c 6f 63 6b 65 64 00 44 41 54 41 25 30 38 78 00 6d 61 67 69 63 3a 20 30 78 25 78 0a 00',
+                replacement='25 6c 6c 78 00 50 75 62 6c 69 73 68 20 70 61 72 74 69 74 69 6f 6e 20 65 72 72 6f 72 2e 00 6c 6f 63 6b 65 64 00 00 00 44 41 54 41 25 30 38 78 00 6d 61 67 69 63 3a 20 30 78 25 78 0a 00',
+                expected_matches=1,
+                match_offsets=[0xC0B45],
+                strict_length=True,
+                fail_on_zero=True,
+                description='Replace the main lk AVB/cmdline unlocked literal with locked',
+            ),
+            'aee_unlocked_literal_to_locked': PatchStage(
+                'aee_unlocked_literal_to_locked',
+                partition='aee',
+                pattern='25 6c 6c 78 00 50 75 62 6c 69 73 68 20 70 61 72 74 69 74 69 6f 6e 20 65 72 72 6f 72 2e 00 75 6e 6c 6f 63 6b 65 64 00 44 41 54 41 25 30 38 78 00 6d 61 67 69 63 3a 20 30 78 25 78 0a 00',
+                replacement='25 6c 6c 78 00 50 75 62 6c 69 73 68 20 70 61 72 74 69 74 69 6f 6e 20 65 72 72 6f 72 2e 00 6c 6f 63 6b 65 64 00 00 00 44 41 54 41 25 30 38 78 00 6d 61 67 69 63 3a 20 30 78 25 78 0a 00',
+                expected_matches=1,
+                match_offsets=[0x9B61F],
+                strict_length=True,
+                fail_on_zero=True,
+                description='Replace the aee AVB/cmdline unlocked literal with locked',
+            ),
+        },
+        expected_sha256='849fdabc71e39b007e8000f26c5744965b3e24bc076886d0eb0aefea2d87858b',
+    ),
+    Device(
         'LG8n',
         'Tecno Pova 4 Pro',
         {

@@ -127,6 +127,20 @@ class PatchStage(Stage):
     def load_payload(self, payload_dir: Path, device_name: str) -> bytes:
         return b''
 
+    @staticmethod
+    def _parse_offset_list(value: Any) -> List[int]:
+        if value is None:
+            return []
+
+        result: List[int] = []
+        for offset in value:
+            if isinstance(offset, str):
+                result.append(int(offset, 0))
+            else:
+                result.append(int(offset))
+
+        return result
+
     def _select_matches(self, matches: List[Tuple[str, int]]) -> List[Tuple[str, int]]:
         if isinstance(self.match_mode, MatchMode):
             if self.match_mode == MatchMode.ALL:
@@ -143,8 +157,19 @@ class PatchStage(Stage):
         if not self.enabled:
             return
 
+        if self.stage_opts.get("strict_length") and len(self.pattern) != len(self.replacement):
+            raise RuntimeError(
+                "Patch '%s' requires equal pattern/replacement length (%d != %d)"
+                % (self.name, len(self.pattern), len(self.replacement))
+            )
+
         if self.partition is not None:
             if self.partition not in ctx.image.partitions:
+                if self.stage_opts.get("fail_on_zero", False):
+                    raise RuntimeError(
+                        "Required partition '%s' not found for patch '%s'"
+                        % (self.partition, self.name)
+                    )
                 print("Warning: partition '%s' not found for patch '%s'" % (self.partition, self.name))
                 return
             targets: List[Tuple[str, LkPartition]] = [(self.partition, ctx.image.partitions[self.partition])]
@@ -162,9 +187,60 @@ class PatchStage(Stage):
                 matches.append((part_name, idx))
                 start = idx + 1
 
-        selected: List[Tuple[str, int]] = self._select_matches(matches)
+        expected_matches = self.stage_opts.get("expected_matches")
+        if expected_matches is not None and len(matches) != int(expected_matches):
+            raise RuntimeError(
+                "Patch '%s' expected %d match(es), found %d"
+                % (self.name, int(expected_matches), len(matches))
+            )
+
+        expected_offsets = self._parse_offset_list(self.stage_opts.get("expected_offsets"))
+        if expected_offsets:
+            if self.partition is None:
+                raise RuntimeError(
+                    "Patch '%s' uses expected_offsets without a fixed partition"
+                    % self.name
+                )
+            actual_offsets = [offset for _, offset in matches]
+            if actual_offsets != expected_offsets:
+                raise RuntimeError(
+                    "Patch '%s' expected offsets %s in partition '%s', found %s"
+                    % (
+                        self.name,
+                        ", ".join("0x%X" % offset for offset in expected_offsets),
+                        self.partition,
+                        ", ".join("0x%X" % offset for offset in actual_offsets),
+                    )
+                )
+
+        match_offsets = self._parse_offset_list(self.stage_opts.get("match_offsets"))
+        if match_offsets:
+            if self.partition is None:
+                raise RuntimeError(
+                    "Patch '%s' uses match_offsets without a fixed partition"
+                    % self.name
+                )
+            missing_offsets = [
+                offset
+                for offset in match_offsets
+                if (self.partition, offset) not in matches
+            ]
+            if missing_offsets:
+                raise RuntimeError(
+                    "Patch '%s' requested offsets not found in partition '%s': %s"
+                    % (
+                        self.name,
+                        self.partition,
+                        ", ".join("0x%X" % offset for offset in missing_offsets),
+                    )
+                )
+            selected = [(self.partition, offset) for offset in match_offsets]
+        else:
+            selected = self._select_matches(matches)
 
         if not selected:
+            if self.stage_opts.get("fail_on_zero", False):
+                raise RuntimeError("Pattern not found for required patch '%s'" % self.name)
             print("Warning: Pattern not found for patch '%s'" % self.name)
             return
 
@@ -181,7 +257,10 @@ class PatchStage(Stage):
                 applied += 1
             part.data = bytes(data_buf)
 
-        match_desc = "all matches" if self.match_mode in (-1, MatchMode.ALL) else "first match" if self.match_mode == MatchMode.FIRST else "match #%s" % self.match_mode
+        if match_offsets:
+            match_desc = "offsets %s" % ", ".join("0x%X" % offset for offset in match_offsets)
+        else:
+            match_desc = "all matches" if self.match_mode in (-1, MatchMode.ALL) else "first match" if self.match_mode == MatchMode.FIRST else "match #%s" % self.match_mode
         print("Successfully applied patch '%s': %d bytes -> %d bytes (%s, %d hit(s))" %
               (self.name, len(self.pattern), len(self.replacement), match_desc, applied))
 
@@ -213,6 +292,19 @@ class StageFactory:
             replacement: Union[str, bytes] = config["replacement"]
             partition: Optional[str] = config.get("partition")
             match_mode_val = config.get("match_mode", "first")
+            stage_kwargs = {
+                key: value
+                for key, value in config.items()
+                if key not in {
+                    "type",
+                    "pattern",
+                    "replacement",
+                    "partition",
+                    "match_mode",
+                    "description",
+                    "enabled",
+                }
+            }
 
             if isinstance(match_mode_val, str):
                 if match_mode_val.lower() == "all":
@@ -224,7 +316,16 @@ class StageFactory:
             else:
                 match_mode = match_mode_val
 
-            return PatchStage(name, pattern, replacement, match_mode, partition=partition, description=description, enabled=enabled)
+            return PatchStage(
+                name,
+                pattern,
+                replacement,
+                match_mode,
+                partition=partition,
+                description=description,
+                enabled=enabled,
+                **stage_kwargs,
+            )
         else:
             raise ValueError("Unknown stage type: %s" % stage_type)
 
