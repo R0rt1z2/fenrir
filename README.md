@@ -101,6 +101,7 @@ The following devices are currently supported:
 | Tecno Pova 4 Pro | `LG8n` |
 | Tecno Pova 5 | `LH7n` |
 | Zinwa Q25 | `Q25` |
+| Redmi K70E/POCO X6 Pro 5G | `duchamp` |
 | Redmi Turbo 4/POCO X7 Pro | `rodin` |
 
 > [!NOTE]
