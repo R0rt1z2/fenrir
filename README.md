@@ -103,6 +103,7 @@ The following devices are currently supported:
 | Zinwa Q25 | `Q25` |
 | Redmi K70E/POCO X6 Pro 5G | `duchamp` |
 | Redmi Turbo 4/POCO X7 Pro | `rodin` |
+| Redmi Turbo 5 Max/POCO X8 Pro Max | `dash` |
 
 > [!NOTE]
 > Support for the CMF Phone 1 (`Tetris`) is still incomplete.
