@@ -1,3 +1,5 @@
+from hashlib import sha256
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from injector import BootloaderInjector
@@ -15,6 +17,20 @@ class Device:
         self.device_opts: Dict[str, Any] = kwargs
 
     def execute(self, args: Any) -> int:
+        expected_sha256 = self.device_opts.get("expected_sha256")
+        if expected_sha256:
+            expected_hashes = (
+                [expected_sha256]
+                if isinstance(expected_sha256, str)
+                else list(expected_sha256)
+            )
+            actual_sha256 = sha256(Path(args.image).read_bytes()).hexdigest()
+            if actual_sha256.lower() not in [h.lower() for h in expected_hashes]:
+                raise RuntimeError(
+                    "Input image SHA256 mismatch for %s: expected one of %s, got %s"
+                    % (self.name, ", ".join(expected_hashes), actual_sha256)
+                )
+
         injector: BootloaderInjector = BootloaderInjector(
             args.image,
             args.payload_dir,
