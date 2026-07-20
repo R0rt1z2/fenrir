@@ -1,1 +1,1 @@
-liblk>=3.2
+liblk @ git+https://github.com/R0rt1z2/liblk
