@@ -105,9 +105,6 @@ The following devices are currently supported:
 | Redmi Turbo 4/POCO X7 Pro | `rodin` |
 | Redmi Turbo 5 Max/POCO X8 Pro Max | `dash` |
 
-> [!NOTE]
-> Support for the CMF Phone 1 (`Tetris`) is still incomplete.
-
 Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
 If it isn’t, you may be able to use the exploit. You can verify this by examining an `expdb` dump and looking for the `img_auth_required` flag when the partition is being loaded:
