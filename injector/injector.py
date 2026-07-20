@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from liblk.image import LkImage
 
-from cert_bypass import apply_cert_bypass
+from cert_bypass import CertBypass, apply_cert_bypass
 from stage import InjectionContext, Stage, StageFactory
 
 
@@ -102,8 +102,8 @@ class BootloaderInjector:
 
         return len(injected_stages) > 0 or len(payload_stages_skipped) > 0
 
-    def apply_cert_bypass(self) -> List[str]:
-        signed: List[str] = apply_cert_bypass(self.image, self._trailing)
+    def apply_cert_bypass(self, mode: CertBypass = CertBypass.OVERRIDE) -> List[str]:
+        signed: List[str] = apply_cert_bypass(self.image, self._trailing, mode)
         if signed:
             self._finalized = True
         return signed

@@ -1,3 +1,4 @@
+from cert_bypass import CertBypass
 from device import Device
 from stage import PayloadStage, PatchStage
 from patch_utils import MatchMode
@@ -534,7 +535,7 @@ DEVICES = [
                 description='Prevent LK from relocking seccfg',
             )
         },
-        cert_bypass=True
+        cert_bypass=CertBypass.OVERRIDE
     ),
     Device(
         'rodin',
@@ -597,7 +598,7 @@ DEVICES = [
                 description='Force boot state to always be set to green',
             ),
         },
-        cert_bypass=True
+        cert_bypass=CertBypass.OVERRIDE
     ),
     Device(
         'duchamp',
@@ -674,7 +675,7 @@ DEVICES = [
                 description='Force AVB_SLOT_VERIFY_FLAGS_ALLOW_VERIFICATION_ERROR',
             ),
         },
-        cert_bypass=True
+        cert_bypass=CertBypass.OVERRIDE
     ),
     Device(
         'dash',
@@ -730,6 +731,6 @@ DEVICES = [
                 description='Skip security error branch - always execute commands',
             ),
         },
-        cert_bypass=True,
+        cert_bypass=CertBypass.OVERRIDE,
     ),
 ]

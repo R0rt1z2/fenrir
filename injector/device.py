@@ -1,17 +1,19 @@
 from typing import Any, Dict, Optional
 
+from cert_bypass import CertBypass
 from injector import BootloaderInjector
 
 
 class Device:
     def __init__(self, name: str, codename: str, stages: Dict[str, Any],
-                 base: Optional[int] = None, cert_bypass: bool = False,
+                 base: Optional[int] = None,
+                 cert_bypass: Optional[CertBypass] = None,
                  **kwargs: Any) -> None:
         self.name: str = name
         self.codename: str = codename
         self.stages: Dict[str, Any] = stages
         self.base: Optional[int] = base
-        self.cert_bypass: bool = cert_bypass
+        self.cert_bypass: Optional[CertBypass] = cert_bypass
         self.device_opts: Dict[str, Any] = kwargs
 
     def execute(self, args: Any) -> int:
@@ -40,8 +42,8 @@ class Device:
         if not injector.inject_all_stages():
             return 1
 
-        if self.cert_bypass:
-            injector.apply_cert_bypass()
+        if self.cert_bypass is not None:
+            injector.apply_cert_bypass(self.cert_bypass)
 
         injector.save_patched_bootloader(args.output)
         return 0
