@@ -105,7 +105,8 @@ class InlinePayloadStage(Stage):
 
 class PatchStage(Stage):
     def __init__(self, name: str, pattern: Union[str, bytes], replacement: Union[str, bytes],
-                 match_mode: Union[int, MatchMode] = MatchMode.FIRST, partition: Optional[str] = None,
+                 match_mode: Union[int, MatchMode] = MatchMode.FIRST,
+                 partition: Optional[Union[str, List[str]]] = None,
                  description: str = "", **kwargs: Any) -> None:
         super().__init__(name, 0, 0, description=description, **kwargs)
 
@@ -115,7 +116,12 @@ class PatchStage(Stage):
             self.pattern = pattern
 
         self.match_mode: Union[int, MatchMode] = match_mode
-        self.partition: Optional[str] = partition
+        if partition is None:
+            self.partitions: Optional[List[str]] = None
+        elif isinstance(partition, str):
+            self.partitions = [partition]
+        else:
+            self.partitions = list(partition)
         self.replacement: bytes = self._process_replacement(replacement)
 
     def _process_replacement(self, replacement: Union[str, bytes]) -> bytes:
@@ -143,11 +149,15 @@ class PatchStage(Stage):
         if not self.enabled:
             return
 
-        if self.partition is not None:
-            if self.partition not in ctx.image.partitions:
-                print("Warning: partition '%s' not found for patch '%s'" % (self.partition, self.name))
+        if self.partitions is not None:
+            targets: List[Tuple[str, LkPartition]] = []
+            for part_name in self.partitions:
+                if part_name not in ctx.image.partitions:
+                    print("Warning: partition '%s' not found for patch '%s'" % (part_name, self.name))
+                    continue
+                targets.append((part_name, ctx.image.partitions[part_name]))
+            if not targets:
                 return
-            targets: List[Tuple[str, LkPartition]] = [(self.partition, ctx.image.partitions[self.partition])]
         else:
             targets = list(ctx.image.partitions.items())
 
@@ -211,7 +221,7 @@ class StageFactory:
         elif stage_type == "patch":
             pattern: Union[str, bytes] = config["pattern"]
             replacement: Union[str, bytes] = config["replacement"]
-            partition: Optional[str] = config.get("partition")
+            partition: Optional[Union[str, List[str]]] = config.get("partition")
             match_mode_val = config.get("match_mode", "first")
 
             if isinstance(match_mode_val, str):
