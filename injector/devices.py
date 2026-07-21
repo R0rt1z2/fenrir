@@ -901,4 +901,53 @@ DEVICES = [
         },
         cert_bypass=CertBypass.WRAP
     ),
+    Device(
+        'klee',
+        'REDMI Turbo 5 / POCO X8 Pro',
+        {
+            'avb_allow_verification_error': PatchStage(
+                'avb_allow_verification_error',
+                pattern='e1 07 9f 1a f6 17 9f 1a 15 05 88 1a',
+                replacement='e1 07 9f 1a 36 00 80 52 15 05 88 1a',
+                match_mode=MatchMode.ALL,
+                description='Force AVB_SLOT_VERIFY_FLAGS_ALLOW_VERIFICATION_ERROR',
+            ),
+            'force_green_state': PatchStage(
+                'force_green_state',
+                pattern='3f 23 03 d5 68 05 00 d0 00 89 06 b9',
+                replacement='3f 23 03 d5 68 05 00 d0 1f 89 06 b9',
+                match_mode=MatchMode.ALL,
+                description='Force boot state to always be set to green',
+            ),
+            'spoof_lock_state': PatchStage(
+                'spoof_lock_state',
+                pattern='3f 23 03 d5 fd 7b be a9 f4 4f 01 a9 fd 03 00 91 f3 03 00 aa 8a 01 00 94',
+                replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6 1f 20 03 d5 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Force lock state to always be LKS_LOCK',
+            ),
+            'bypass_lock_control': PatchStage(
+                'bypass_lock_control',
+                pattern='00 dc 2c 91 d5 00 00 14 e8 0f 40 b9 1f 05 00 71 21 01 00 54',
+                replacement='00 38 2d 91 d5 00 00 14 e8 0f 40 b9 1f 05 00 71 09 00 00 14',
+                match_mode=MatchMode.ALL,
+                description='Allow fastboot flashing regardless of lock state',
+            ),
+            'bypass_cmd_erase_lock_control': PatchStage(
+                'bypass_cmd_erase_lock_control',
+                pattern='e8 0f 40 b9 1f 05 00 71 81 00 00 54',
+                replacement='e8 0f 40 b9 1f 05 00 71 04 00 00 14',
+                match_mode=MatchMode.ALL,
+                description='Allow fastboot erasing regardless of lock state',
+            ),
+            'bypass_security_control': PatchStage(
+                'bypass_security_control',
+                pattern='28 17 40 b9 c8 01 00 34',
+                replacement='28 17 40 b9 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Skip security error branch - always execute commands',
+            ),
+        },
+        cert_bypass=True,
+    ),
 ]
