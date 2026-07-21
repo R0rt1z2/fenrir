@@ -105,6 +105,7 @@ The following devices are currently supported:
 | Redmi Turbo 4/POCO X7 Pro | `rodin` |
 | Redmi Turbo 5 Max/POCO X8 Pro Max | `dash` |
 | Redmi Note 11T Pro/Pro+/POCO X4 GT/Redmi K50i | `xaga` |
+| Xiaomi 12T | `plato` |
 
 Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
