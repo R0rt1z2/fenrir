@@ -625,6 +625,20 @@ DEVICES = [
                 match_mode=MatchMode.ALL,
                 description='Force boot state to always be set to green',
             ),
+            'bypass_imgkey_region_check': PatchStage(
+                'bypass_imgkey_region_check',
+                pattern='36 0b 01 94 00 05 00 34',
+                replacement='36 0b 01 94 28 00 00 14',
+                match_mode=MatchMode.ALL,
+                description='Skip region check - Allow cross-CN / CN firmware to boot',
+            ),
+            'bypass_sku_check': PatchStage(
+                'bypass_sku_check',
+                pattern='f6 03 00 aa 17 f0 fe 97 e0 00 00 34',
+                replacement='f6 03 00 aa 17 f0 fe 97 7c 00 00 14',
+                match_mode=MatchMode.ALL,
+                description='Skip sku check - Allow cross-CN / CN firmware to boot',
+            ),
         },
         cert_bypass=CertBypass.OVERRIDE
     ),
