@@ -913,22 +913,6 @@ DEVICES = [
                 match_mode=MatchMode.ALL,
                 description='Don\'t enforce secure boot policy',
             ),
-            'bypass_required_auth_failure': PatchStage(
-                'bypass_required_auth_failure',
-                pattern='e0 03 15 aa e1 03 19 2a ae 09 00 94 00 02 00 34',
-                replacement='e0 03 15 aa e1 03 19 2a ae 09 00 94 10 00 00 14',
-                partition='lk',
-                match_mode=MatchMode.ALL,
-                description='Force required image authentication to always succeed',
-            ),
-            'bypass_optional_auth_failure': PatchStage(
-                'bypass_optional_auth_failure',
-                pattern='e0 03 15 aa e1 03 19 2a a2 09 00 94 00 0a 00 35',
-                replacement='e0 03 15 aa e1 03 19 2a a2 09 00 94 00 00 80 52',
-                partition='lk',
-                match_mode=MatchMode.ALL,
-                description='Force optional image authentication to always succeed',
-            ),
             'force_green_state': PatchStage(
                 'force_green_state',
                 pattern='3f 23 03 d5 a8 05 00 90 00 39 09 b9',
