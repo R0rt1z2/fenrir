@@ -921,14 +921,6 @@ DEVICES = [
                 match_mode=MatchMode.ALL,
                 description='Force boot state to always be set to green',
             ),
-            'force_green_state_rot': PatchStage(
-                'force_green_state_rot',
-                pattern='08 0a 00 b0 00 c1 0a b9',
-                replacement='08 0a 00 b0 1f c1 0a b9',
-                partition='lk',
-                match_mode=MatchMode.ALL,
-                description='Force the root-of-trust boot state to green',
-            ),
             'bypass_cmd_erase_lock_control': PatchStage(
                 'bypass_cmd_erase_lock_control',
                 pattern='81 00 00 54 20 06 00 f0',
