@@ -901,4 +901,49 @@ DEVICES = [
         },
         cert_bypass=CertBypass.WRAP
     ),
+    Device(
+        'zhujiang',
+        'OPPO Find X9',
+        {
+            'bypass_special_version_check': PatchStage(
+                'bypass_special_version_check',
+                pattern='27 00 00 94 40 03 00 37',
+                replacement='27 00 00 94 1f 20 03 d5',
+                partition='lk',
+                match_mode=MatchMode.ALL,
+                description="Bypass OPPO special_version check to allow booting into bootloader mode",
+            ),
+            'bypass_export_prj_whitelist': PatchStage(
+                'bypass_export_prj_whitelist',
+                pattern='c1 01 00 54 f3 07 00 b0',
+                replacement='1f 20 03 d5 f3 07 00 b0',
+                partition='lk',
+                match_mode=MatchMode.ALL,
+                description="Bypass OPPO export prj whitelist to allow booting into bootloader mode",
+            ),
+            'bypass_olock_boot_gate': PatchStage(
+                'bypass_olock_boot_gate',
+                pattern='1f 05 00 71 a0 02 00 54',
+                replacement='1f 05 00 71 1f 20 03 d5',
+                partition='lk',
+                match_mode=MatchMode.ALL,
+                description="Bypass OPPO olock check to skip rebooting out of recovery when unlocked",
+            ),
+            'add_volup_recovery_key': PatchStage(
+                'add_volup_recovery_key',
+                pattern='f1 00 00 94 c0 ed 07 36 28 00 80 52 e0 13 00 91 e8 07 00 b9 99 96 02 94 '
+                        'e8 07 40 b9 1f 0d 00 71 e0 ec ff 54 80 01 80 52 e7 71 02 94 e3 03 00 2a '
+                        '20 07 00 f0 00 3c 11 91 61 08 00 d0 21 20 22 91 c2 36 80 52 dc 0c 02 94 '
+                        '69 ff ff 17',
+                replacement='20 00 80 52 81 00 80 52 42 01 80 52 ee 73 02 94 20 01 00 35 00 e2 84 52 '
+                            'fa 07 02 94 20 00 80 52 81 00 80 52 42 01 80 52 e7 73 02 94 40 00 00 35 '
+                            '6f ff ff 17 62 ff ff 17 1f 20 03 d5 1f 20 03 d5 1f 20 03 d5 1f 20 03 d5 '
+                            '1f 20 03 d5',
+                partition='lk',
+                match_mode=MatchMode.ALL,
+                description='Add Volume Up + Power Key via PMIC to boot into recovery mode',
+            ),
+        },
+        cert_bypass=CertBypass.OVERRIDE,
+    ),
 ]
