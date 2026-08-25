@@ -225,7 +225,6 @@ DEVICES = [
         },
         cert_bypass=CertBypass.OVERRIDE
     ),
-
     Device(
         'Galaga',
         'CMF Phone 2 Pro',
@@ -272,8 +271,8 @@ DEVICES = [
             ),
             'force_green_state': PatchStage(
                 'force_green_state',
-                pattern='88 09 00 f0 00 51 08 b9 c0 03 5f d6',
-                replacement='88 09 00 f0 1f 51 08 b9 c0 03 5f d6',
+                pattern='88 09 00 d0 00 51 08 b9 c0 03 5f d6',
+                replacement='88 09 00 d0 1f 51 08 b9 c0 03 5f d6',
                 partition='lk',
                 match_mode=MatchMode.ALL,
                 description='Force boot state to always be set to green',
