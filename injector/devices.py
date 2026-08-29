@@ -902,8 +902,8 @@ DEVICES = [
         cert_bypass=CertBypass.WRAP
     ),
     Device(
-        'CM6',
-        'Tecno Camon 40 Pro 4G',
+        'CM6A15',
+        'Tecno Camon 40 Pro 4G (Android 15)',
         {
             'sec_get_vfy_policy': PatchStage(
                 'sec_get_vfy_policy',
@@ -996,6 +996,64 @@ DEVICES = [
                 match_mode=MatchMode.ALL,
                 description='Prevent LK from relocking seccfg',
             )
+        },
+        cert_bypass=CertBypass.OVERRIDE,
+    ),
+    Device(
+        'CM6A16',
+        'Tecno Camon 40 Pro 4G (Android 16)',
+        {
+            'sec_get_vfy_policy': PatchStage(
+                'sec_get_vfy_policy',
+                pattern='00 01 00 b4 fd 7b bf a9',
+                replacement='00 00 80 52 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Don\'t enforce secure boot policy',
+            ),
+            'force_green_state': PatchStage(
+                'force_green_state',
+                pattern='68 03 00 f0 00 19 0c b9 c0 03 5f d6',
+                replacement='68 03 00 f0 1f 19 0c b9 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Force boot state to always be set to green',
+            ),
+            'bypass_security_control': PatchStage(
+                'bypass_security_control',
+                pattern='e8 0b 40 b9 1f 0d 00 71 21 01 00 54',
+                replacement='e8 0b 40 b9 1f 0d 00 71 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Skip security error branch - always execute commands',
+            ),
+            'spoof_sboot_state': PatchStage(
+                'spoof_get_sboot_state',
+                pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 aa 20 00 80 52 c4',
+                replacement='48 04 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6 1f 20 03 d5 c4',
+                match_mode=MatchMode.ALL,
+                description='Force sboot state to always be ATTR_SBOOT_ONLY_ENABLE_ON_SCHIP',
+            ),
+            'spoof_lock_state': PatchStage(
+                'spoof_lock_state',
+                pattern='20 02 00 b4 fd 7b be a9 f3 0b 00 f9 fd 03 00 91',
+                replacement='88 00 80 52 08 00 00 b9 00 00 80 52 c0 03 5f d6',
+                match_mode=MatchMode.ALL,
+                description='Force lock state to always be LKS_LOCK',
+            ),
+            'dont_relock_seccfg': PatchStage(
+                'dont_relock_seccfg',
+                pattern='fd 7b be a9 f3 0b 00 f9 fd 03 00 91 f3 03 00 2a 28 00 80 52',
+                replacement='00 00 80 52 c0 03 5f d6 1f 20 03 d5 1f 20 03 d5 1f 20 03 d5',
+                match_mode=MatchMode.ALL,
+                description='Prevent LK from relocking seccfg',
+            ),
+            'avb_allow_verification_error': PatchStage(
+                'avb_allow_verification_error',
+                pattern='bf 02 00 71 48 00 80 52 b6 02 00 52',
+                replacement='bf 02 00 71 48 00 80 52 36 00 80 52',
+                match_mode=MatchMode.ALL,
+                description='Force AVB_SLOT_VERIFY_FLAGS_ALLOW_VERIFICATION_ERROR (bit0 of the flags accumulator w22): '
+                            'turns "eor w22, w21, 1" (w22 = !img_auth_required) into "mov w22, #0x1" at lk.data 0x6086c so '
+                            'verification errors (vbmeta key mismatch) are tolerated instead of halting',
+            ),
         },
         cert_bypass=CertBypass.OVERRIDE,
     ),
