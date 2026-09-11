@@ -88,6 +88,34 @@ After building, you should see a new file named `lk.patched` in the root directo
 > [!NOTE]
 > If fastboot mode is not available on your device, you might have to use another method to flash the output image. The provided script assumes fastboot mode is available.
 
+### Legacy V6 devices need a separate re-sign step
+
+Most devices here let the injector re-sign the image itself through
+`cert_bypass` (`CertBypass.WRAP` / `CertBypass.OVERRIDE`). Some devices —
+`yunluo` (Redmi Pad, MT6789) among them — use the **older MTK V6 signing
+scheme**, where that approach does not apply and `cert_bypass` is left as
+`None`. For those, the injector output is **unsigned**, and the preloader will
+refuse to chain-load it unless it is re-signed with an external tool.
+
+[`pwnage24mtk-main/`](pwnage24mtk-main/) is vendored here for exactly that
+(GPL-3.0 — see [Licensing of vendored code](#licensing-of-vendored-code)):
+
+```bash
+# 1. apply the patches (produces an unsigned image)
+./inject.sh yunluo /path/to/lk.img -o lk.unsigned.img
+
+# 2. re-sign for legacy V6 -- the --legacy flag is NOT optional
+python3 pwnage24mtk-main/sign_mtk_cert.py -w --all --legacy lk.unsigned.img -o lk.patched
+
+# 3. verify before flashing
+python3 pwnage24mtk-main/verify_mtk_image.py --all lk.patched   # must print: Result: VALID
+```
+
+`verify_mtk_image.py` checks the CERT1/CERT2 signatures together with the image
+header and data hashes, so treat a `Result: VALID` line as the gate for a
+flashable image. Skipping step 2, or omitting `--legacy`, yields an image the
+preloader rejects.
+
 ## Status
 The following devices are currently supported:
 
@@ -106,6 +134,7 @@ The following devices are currently supported:
 | Redmi Turbo 5 Max/POCO X8 Pro Max | `dash` |
 | Redmi Note 11T Pro/Pro+/POCO X4 GT/Redmi K50i | `xaga` |
 | Xiaomi 12T | `plato` |
+| Redmi Pad | `yunluo` |
 
 Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
@@ -141,3 +170,12 @@ Key points to be aware of:
 * You cannot keep modifications private if the software is used to provide a networked service.
 
 For full details, please refer to the [LICENSE](https://github.com/R0rt1z2/fenrir/tree/master/LICENSE) file.
+
+### Licensing of vendored code
+
+[`pwnage24mtk-main/`](pwnage24mtk-main/) is a third-party tool vendored
+**unmodified** for the legacy V6 re-signing step described above. It is licensed
+under the **GNU General Public License v3.0 (GPL-3.0)**, which is compatible
+with this project's AGPL-3.0: AGPL-3.0 §13 explicitly permits combining the two,
+and the combined work stays governed by AGPL-3.0. The tool's own `LICENSE` and
+`README.md` are kept alongside it.
