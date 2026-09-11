@@ -106,8 +106,9 @@ The following devices are currently supported:
 | Redmi Turbo 5 Max/POCO X8 Pro Max | `dash` |
 | Redmi Note 11T Pro/Pro+/POCO X4 GT/Redmi K50i | `xaga` |
 | Xiaomi 12T | `plato` |
+| Redmi Note 14 4G | `redmi_note_14_4g` |
 
-Adding support for a new device isn’t straightforward, but it is possible with some effort and reverse engineering. A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
+Adding support for a new device is detailed in the [Porting Guide](PORTING.md). A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
 If it isn’t, you may be able to use the exploit. You can verify this by examining an `expdb` dump and looking for the `img_auth_required` flag when the partition is being loaded:
 ```
@@ -116,7 +117,7 @@ If it isn’t, you may be able to use the exploit. You can verify this by examin
 [PART] part: lk_a img: bl2_ext cert vfy(0 ms)
 ```
 
-The payload isn’t strictly necessary, it’s more of a neat addition to the exploit. At the moment, it can’t modify memory at runtime, as doing so triggers an MMU fault that I haven’t resolved yet.
+The payload isn’t strictly necessary, it’s more of a neat addition to the exploit.
 
 What it can do is register custom fastboot commands, control the boot mode, and dynamically call any built-in bootloader functions on the fly (you can probably do more, just use your imagination).
 
@@ -125,9 +126,10 @@ In addition to patching `sec_get_vfy_policy()`, the included PoC also spoofs the
 Another device known to be affected by this vulnerability is the Vivo X80 Pro. From my previous testing, it didn’t even verify `bl2_ext` despite having a locked bootloader (which makes it even worse).
 
 ## TODO
-- [ ] Add proper porting guide for new devices
-- [ ] Fix MMU crashes when modifying memory at runtime
-- [ ] Figure out proper payload appending method
+- [x] Add proper porting guide for new devices (see [PORTING.md](PORTING.md))
+- [x] Fix MMU crashes when modifying memory at runtime (implemented D-Cache/I-Cache synchronization & memory barriers)
+- [x] Figure out proper payload appending method (implemented `AppendPayloadStage` in injector)
+
 
 ## License
 

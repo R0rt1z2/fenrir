@@ -94,6 +94,42 @@ class CustomPayloadStage(Stage):
         return pad_payload(payload)
 
 
+class AppendPayloadStage(Stage):
+    def __init__(self, name: str, pivot_addr: int, payload_file: str = "payload.bin",
+                 alignment: int = 16, description: str = "", **kwargs: Any) -> None:
+        super().__init__(name, 0, pivot_addr, description=description, **kwargs)
+        self.payload_file: str = payload_file
+        self.alignment: int = alignment
+
+    def load_payload(self, payload_dir: Path, device_name: str) -> bytes:
+        payload_path: Path = payload_dir / device_name.lower() / self.name / self.payload_file
+        if not payload_path.exists():
+            raise FileNotFoundError("Payload not found: %s" % payload_path)
+        with open(payload_path, 'rb') as f:
+            payload: bytes = f.read()
+        return pad_payload(payload)
+
+    def execute(self, ctx: InjectionContext) -> None:
+        if not self.enabled:
+            return
+
+        payload: bytes = self.load_payload(ctx.payload_dir, ctx.device_name)
+        data: bytearray = bytearray(ctx.lk.data)
+        pad_len: int = (self.alignment - (len(data) % self.alignment)) % self.alignment
+        data.extend(b'\x00' * pad_len)
+        payload_off: int = len(data)
+        self.base_addr = ctx.base + payload_off
+        data.extend(payload)
+
+        pivot_off: int = self.pivot_addr - ctx.base
+        if pivot_off < 0 or pivot_off + 4 > len(data):
+            raise ValueError("Pivot address 0x%X is outside 'lk' partition bounds" % self.pivot_addr)
+        data[pivot_off:pivot_off + 4] = encode_bl(self.pivot_addr, self.base_addr)
+
+        ctx.lk.data = bytes(data)
+        print("Appended payload stage '%s' at 0x%X (pivot 0x%X)" % (self.name, self.base_addr, self.pivot_addr))
+
+
 class InlinePayloadStage(Stage):
     def __init__(self, name: str, base_addr: int, pivot_addr: int, payload_data: bytes, description: str = "", **kwargs: Any) -> None:
         super().__init__(name, base_addr, pivot_addr, description=description, **kwargs)
@@ -213,6 +249,11 @@ class StageFactory:
             pivot_addr = config["pivot"]
             payload_path: str = config["payload_path"]
             return CustomPayloadStage(name, base_addr, pivot_addr, payload_path, description=description, enabled=enabled)
+        elif stage_type == "append":
+            pivot_addr = config["pivot"]
+            payload_file: str = config.get("payload_file", "payload.bin")
+            alignment: int = config.get("alignment", 16)
+            return AppendPayloadStage(name, pivot_addr, payload_file=payload_file, alignment=alignment, description=description, enabled=enabled)
         elif stage_type == "inline":
             base_addr = config["base"]
             pivot_addr = config["pivot"]
