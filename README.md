@@ -107,6 +107,7 @@ The following devices are currently supported:
 | Redmi Note 11T Pro/Pro+/POCO X4 GT/Redmi K50i | `xaga` |
 | Xiaomi 12T | `plato` |
 | Redmi Note 14 4G | `redmi_note_14_4g` |
+| Redmi 12 / Tanzanite | `tanzanite` |
 
 Adding support for a new device is detailed in the [Porting Guide](PORTING.md). A good starting point is to check whether your phone’s `bl2_ext` partition is verified.
 
