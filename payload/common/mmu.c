@@ -81,6 +81,8 @@ vmm_aspace_t* get_kernel_aspace(void) {
 void set_pte_rwx(vaddr_t vaddr) {
     vmm_aspace_t *kernel_aspace = get_kernel_aspace();
     pte_t *pte_addr = get_pte(&kernel_aspace->arch_aspace, vaddr);
+    if (!pte_addr)
+        return;
 
 #ifdef DEBUG
     video_printf("pte: %llx\n", *pte_addr);
@@ -90,7 +92,19 @@ void set_pte_rwx(vaddr_t vaddr) {
     *pte_addr &= ~(MMU_PTE_ATTR_PXN | MMU_PTE_ATTR_UXN);
     *pte_addr |= MMU_PTE_ATTR_NORMAL_MEMORY;
 
-    ARM64_TLBI(vaae1is, vaddr >> 12);
+    // Ensure PTE write is committed before invalidating TLB
+    DSB_ISHST;
+
+    uint32_t el = arm64_get_current_el();
+    if (el == 3) {
+        ARM64_TLBI(vae3is, vaddr >> 12);
+    } else {
+        ARM64_TLBI(vaae1is, vaddr >> 12);
+    }
+
+    DSB_ISH;
     ISB;
-    DSB;
+
+    // Clean data cache and invalidate instruction cache for this page
+    arm64_sync_caches_range(vaddr, 4096);
 }

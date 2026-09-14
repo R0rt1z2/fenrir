@@ -5,3 +5,4 @@ payload/build/
 *.bin
 settings.json
 bin/*.raw
+*.img
